@@ -4167,3 +4167,21 @@ body.xp-open{overflow:hidden}
 
 /* Admin tables: the icon / initials tile was losing its centering because ".ap-emp span" (meant for the small text lines) also matched the tile */
 .ap-emp span.ap-av{display:flex;align-items:center;justify-content:center;font-size:14px;word-break:normal;flex:none}
+/* ==========================================================================
+   MOBILE FIX: job cards (price / deadline no longer overlap the buttons)
+   ========================================================================== */
+@media (max-width:700px){
+  .browse .job{grid-template-columns:minmax(0,1fr);grid-template-areas:"head" "badges" "facts" "tags" "foot" "btns";gap:8px}
+  .browse .job .job-foot{flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px 12px;min-width:0}
+  .browse .job .deadline{white-space:normal;min-width:0}
+  .browse .job .job-btns{justify-self:stretch;display:flex;gap:8px;width:100%}
+  .browse .job .job-btns form{flex:none}
+  .browse .job .job-btns>a.btn{flex:1;justify-content:center;text-align:center}
+}
+@media (max-width:520px){
+  .grid > .job .job-foot{flex-wrap:wrap;gap:6px 10px}
+  .grid > .job .deadline{white-space:normal}
+  .grid > .job .job-actions{flex-wrap:wrap}
+  .grid > .job .job-btns{width:100%;display:flex;gap:8px}
+  .grid > .job .job-btns>a.btn{flex:1;justify-content:center}
+}
