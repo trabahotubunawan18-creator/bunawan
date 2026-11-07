@@ -1,0 +1,4 @@
+.git
+includes/config.local.php
+database/data.sql
+*.sql

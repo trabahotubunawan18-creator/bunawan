@@ -1,0 +1,15 @@
+# Private settings (database password, Gmail App Password). Never upload these.
+includes/config.local.php
+.env
+
+# Your real records (names, emails, phone numbers, password hashes). Keep this one OFF GitHub.
+database/data.sql
+
+# Files people upload while using the site
+uploads/logos/*
+!uploads/logos/.gitkeep
+tbb_private/
+
+# Editor / system files
+.DS_Store
+Thumbs.db
