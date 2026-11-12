@@ -20,7 +20,7 @@ $from = ' FROM employer_profiles ep JOIN users u ON u.id = ep.user_id JOIN baran
 $c = $pdo->prepare('SELECT COUNT(*)' . $from . $where); $c->execute($p);
 $total = (int)$c->fetchColumn();
 $order = in_array($tab, ['pending', 'more_info'], true) ? 'ep.created_at ASC' : 'ep.created_at DESC';
-$r = $pdo->prepare('SELECT ep.user_id, ep.employer_name, ep.employer_type, ep.verification_status, ep.created_at, ep.permit_expiry, u.email, b.name AS barangay'
+$r = $pdo->prepare('SELECT ep.user_id, ep.logo_path, ep.employer_name, ep.employer_type, ep.verification_status, ep.created_at, ep.permit_expiry, u.email, b.name AS barangay'
     . $from . $where . ' ORDER BY ' . $order . ' LIMIT ' . $per . ' OFFSET ' . (($page - 1) * $per));
 $r->execute($p);
 $rows = $r->fetchAll();
@@ -100,7 +100,7 @@ $tabLink = fn(string $k) => url('admin/verification.php?' . http_build_query(arr
           $wd = (int)floor((time() - strtotime($e1['created_at'])) / 86400);
           $permitSoon = $e1['verification_status'] === 'verified_business' && $e1['permit_expiry'] && $e1['permit_expiry'] <= date('Y-m-d', strtotime('+30 days')); ?>
           <tr>
-            <td><div class="ap-emp"><span class="ap-av"><?= e(initials($e1['employer_name'])) ?></span><div><b><?= e($e1['employer_name']) ?></b><span><?= e($e1['email']) ?></span></div></div></td>
+            <td><div class="ap-emp"><span class="ap-av"<?= !empty($e1['logo_path']) ? ' style="overflow:hidden;padding:0;background:#fff;border:1px solid var(--line)"' : '' ?>><?php if (!empty($e1['logo_path'])): ?><img src="<?= e(public_file_url($e1['logo_path'])) ?>" alt="" style="width:100%;height:100%;object-fit:cover;display:block"><?php else: ?><?= e(initials($e1['employer_name'])) ?><?php endif; ?></span><div><b><?= e($e1['employer_name']) ?></b><span><?= e($e1['email']) ?></span></div></div></td>
             <td><span class="ap-chip"><?= e($typeLabels[$e1['employer_type']] ?? 'Employer') ?></span></td>
             <td><span class="ap-loc"><?= icon('pin', 14) ?> <?= e($e1['barangay']) ?></span></td>
             <td><?= e(date('M j, Y', strtotime($e1['created_at']))) ?>
