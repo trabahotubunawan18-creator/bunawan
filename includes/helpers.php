@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/storage.php';
 // Shared display helpers and the public-job query used by the home and Find Jobs pages.
 
 // Premium is per job post: P49 per month for each post the employer picks. The admin activates it by hand.
@@ -118,7 +119,7 @@ function render_job_card(array $j, bool $featured = false, ?array $save = null):
   <article class="card job<?= $featured ? ' job-featured' : '' ?>">
     <div class="job-head">
       <div class="avatar" aria-hidden="true">
-        <?php if (!empty($j['logo_path'])): ?><img src="<?= url('uploads/' . $j['logo_path']) ?>" alt=""><?php else: ?><?= e(initials($j['employer_name'])) ?><?php endif; ?>
+        <?php if (!empty($j['logo_path'])): ?><img src="<?= public_file_url($j['logo_path']) ?>" alt=""><?php else: ?><?= e(initials($j['employer_name'])) ?><?php endif; ?>
       </div>
       <div class="job-id">
         <h3><a href="<?= url('job.php?id=' . (int)$j['id']) ?>"><?= e($j['title']) ?></a></h3>
@@ -617,4 +618,9 @@ function password_problem(string $pw): ?string {
     if (preg_match('/(.)\1{3,}/', $pw))   return 'Avoid repeating the same character many times.';
 
     return null;
+}
+// Address of a public image (company logo, payment QR). Supabase Storage on the live site, the local uploads/ folder on XAMPP.
+function public_file_url(string $rel): string {
+    if (storage_on()) return rtrim(SUPABASE_URL, '/') . '/storage/v1/object/public/' . rawurlencode(STORAGE_PUBLIC_BUCKET) . '/' . $rel;
+    return url('uploads/' . $rel);
 }
