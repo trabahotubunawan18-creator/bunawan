@@ -46,7 +46,7 @@ $cssVer = filemtime(__DIR__ . '/../assets/css/style.css');
     </a>
     <div class="side-emp">
       <div class="side-emp-top">
-        <span class="av av-sq"><?php if ($emp['logo_path']): ?><img src="<?= url('uploads/' . $emp['logo_path']) ?>" alt=""><?php else: ?><?= e(initials($emp['employer_name'])) ?><?php endif; ?></span>
+        <span class="av av-sq"><?php if ($emp['logo_path']): ?><img src="<?= public_file_url($emp['logo_path']) ?>" alt=""><?php else: ?><?= e(initials($emp['employer_name'])) ?><?php endif; ?></span>
         <div class="side-emp-meta"><b title="<?= e($emp['employer_name']) ?>"><?= e($emp['employer_name']) ?></b><small>Employer account</small></div>
       </div>
       <span class="vs side-vs <?= e($vClass) ?>"><?php if ($canPost): ?><i class="side-tick"><?= icon('check', 11) ?></i><?php else: ?><i class="side-dot"></i><?php endif; ?><?= e($vLabel) ?></span>
