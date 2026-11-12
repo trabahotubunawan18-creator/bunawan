@@ -149,7 +149,7 @@
   });
 })();
 
-/* Messages: top banners (flash) auto-dismiss; form error boxes clear when the person starts fixing the form.
+/* Messages: top banners (flash) auto-dismiss; form error boxes fade out after 8 seconds or when the person starts fixing the form.
    Both get a close (X) button. Handles seeker, employer, admin, login and public pages. */
 (function () {
   function addClose(box, dismiss) {
@@ -191,11 +191,16 @@
   });
 
   // 2) Form error boxes (login, register, settings, post job, admin review...):
-  //    stay until the person starts typing or changes a field, or presses X
+  //    fade out by themselves after 8 seconds (paused while hovered/focused),
+  //    or sooner if the person starts typing, changes a field, or presses X
   document.querySelectorAll('.alert-error:not(.alert-flash)').forEach(function (box) {
-    var out = remover(box);
-    function dismiss() { out(); }
+    var timer = null, out = remover(box);
+    function dismiss() { clearTimeout(timer); out(); }
+    function start() { clearTimeout(timer); timer = setTimeout(dismiss, 8000); }
     addClose(box, dismiss);
+    start();
+    box.addEventListener('mouseenter', function () { clearTimeout(timer); });
+    box.addEventListener('mouseleave', start);
     function onEdit(ev) { if (!box.contains(ev.target)) dismiss(); }
     document.addEventListener('input', onEdit);
     document.addEventListener('change', onEdit);
