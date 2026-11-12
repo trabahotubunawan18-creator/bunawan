@@ -30,8 +30,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 $pageTitle = 'Contact Us';
 $bodyClass = 'contact-page';
-require __DIR__ . '/includes/header.php';
+$inDash = is_logged_in() && ($_SESSION['role'] ?? '') === 'employer'; // employers stay inside their dashboard
+require __DIR__ . ($inDash ? '/includes/emp_top.php' : '/includes/header.php');
 ?>
+<?php if ($inDash): ?>
+<div class="emp-page emp-contact">
+  <div class="emp-hero">
+    <div>
+      <h1>Contact us</h1>
+      <p>Questions, feedback, or something to report? Send us a message.</p>
+    </div>
+  </div>
+<?php else: ?>
 <section class="page-hero">
   <div class="wrap">
     <h1>Contact us</h1>
@@ -41,6 +51,7 @@ require __DIR__ . '/includes/header.php';
 
 <section class="about-band">
   <div class="wrap">
+<?php endif; ?>
     <div class="contact-grid">
       <div class="card contact-card">
         <?php if ($errors): ?><div class="alert alert-error" role="alert"><ul><?php foreach ($errors as $er): ?><li><?= e($er) ?></li><?php endforeach; ?></ul></div><?php endif; ?>
@@ -83,6 +94,11 @@ require __DIR__ . '/includes/header.php';
         </div>
       </aside>
     </div>
+<?php if ($inDash): ?>
+</div>
+<?php require __DIR__ . '/includes/dash_bottom.php'; ?>
+<?php else: ?>
   </div>
 </section>
 <?php require __DIR__ . '/includes/footer.php'; ?>
+<?php endif; ?>
