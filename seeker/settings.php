@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!password_verify($cur, $me['password_hash'])) { rate_hit('settings'); $errors[] = 'Your current password is incorrect.'; }
         elseif ($act === 'password') {
             $new = $_POST['new'] ?? '';
-            if (strlen($new) < 8 || !preg_match('/[A-Za-z]/', $new) || !preg_match('/\d/', $new)) $errors[] = 'New password must be at least 8 characters with a letter and a number.';
+            if ($pw_err = password_problem($new)) $errors[] = $pw_err;
             elseif ($new !== ($_POST['new2'] ?? '')) $errors[] = 'The two new passwords do not match.';
             else {
                 $pdo->prepare('UPDATE users SET password_hash = ? WHERE id = ?')->execute([password_hash($new, PASSWORD_DEFAULT), $uid]);
@@ -73,7 +73,7 @@ require __DIR__ . '/../includes/dash_top.php';
   <form method="post" class="card form sg-card">
     <?= csrf_field() ?><input type="hidden" name="action" value="password">
     <h2 class="sg-h"><span class="sg-ico"><?= icon('lock', 16) ?></span> Change password</h2>
-    <p class="small sg-note">Use at least 8 characters with a letter and a number.</p>
+    <p class="small sg-note">Use at least 8 characters with uppercase, lowercase, a number and a symbol.</p>
     <label for="s-cur1">Current password</label><input id="s-cur1" name="current" type="password" autocomplete="current-password" required>
     <div class="row2">
       <div><label for="s-new">New password</label><input id="s-new" name="new" type="password" minlength="8" autocomplete="new-password" required></div>
