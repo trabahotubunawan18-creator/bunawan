@@ -114,7 +114,9 @@ require __DIR__ . '/../includes/admin_top.php';
       $st = $m['status'];
       $subj = trim((string)$m['subject']);
       $reSubj = 'Re: ' . ($subj !== '' ? $subj : 'Your message to Trabaho Tu Bunawan');
-      $mailto = 'mailto:' . $m['email'] . '?subject=' . rawurlencode($reSubj);
+      $mailto = 'https://mail.google.com/mail/?view=cm&fs=1'
+        . '&to=' . rawurlencode($m['email'])
+        . '&su=' . rawurlencode($reSubj); // opens Gmail compose in a new tab
   ?>
   <article class="cm-card cm-<?= e($st) ?>" id="msg-<?= (int)$m['id'] ?>">
     <header class="cm-head">
@@ -122,7 +124,7 @@ require __DIR__ . '/../includes/admin_top.php';
       <div class="cm-who">
         <h2><?= e($m['name']) ?></h2>
         <p class="cm-meta">
-          <a href="<?= e('mailto:' . $m['email']) ?>"><?= icon('mail', 14) ?><?= e($m['email']) ?></a>
+          <a href="<?= e($mailto) ?>" target="_blank" rel="noopener"><?= icon('mail', 14) ?><?= e($m['email']) ?></a>
           <span><?= icon('clock', 14) ?><?= e(date('M j, Y g:i A', strtotime($m['created_at']))) ?></span>
         </p>
       </div>
@@ -137,7 +139,7 @@ require __DIR__ . '/../includes/admin_top.php';
     <form method="post" action="<?= e(url($backUrl)) ?>" class="cm-actions">
       <?= csrf_field() ?>
       <input type="hidden" name="id" value="<?= (int)$m['id'] ?>">
-      <a class="btn btn-primary btn-sm" href="<?= e($mailto) ?>"><?= icon('send', 15) ?> Reply by email</a>
+      <a class="btn btn-primary btn-sm" href="<?= e($mailto) ?>" target="_blank" rel="noopener"><?= icon('send', 15) ?> Reply by email</a>
       <?php if ($st === 'unread'): ?>
         <button class="btn btn-outline btn-sm" name="action" value="read">Mark as read</button>
       <?php else: ?>
