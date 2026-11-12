@@ -6,6 +6,7 @@ $cnt = function (string $sql) { return (int)db()->query($sql)->fetchColumn(); };
 $nVerif  = $cnt("SELECT COUNT(*) FROM employer_profiles WHERE verification_status = 'pending'");
 $nFlag   = $cnt("SELECT COUNT(*) FROM job_posts WHERE status = 'pending'");
 $nComplaints = $cnt("SELECT COUNT(*) FROM job_reports WHERE status = 'open'");
+$nContact = $cnt("SELECT COUNT(*) FROM contact_messages WHERE status = 'unread'");
 $nPremium = $cnt("SELECT COUNT(*) FROM premium_subscriptions WHERE status = 'requested'");
 $nUnread = $cnt('SELECT COUNT(*) FROM notifications WHERE user_id = ' . (int)$_SESSION['uid'] . ' AND is_read = 0');
 $flash = get_flash();
@@ -19,6 +20,7 @@ $navItems = [
     ['admin/jobs.php', 'jobs.php', 'Jobs', 'briefcase', 0, true],
     ['admin/users.php', 'users.php', 'Users', 'users', 0, true],
     ['admin/complaints.php', 'complaints.php', 'Complaints', 'flag', $nComplaints, true],
+    ['admin/contact-messages.php', 'contact-messages.php', 'Contact Messages', 'mail', $nContact, true],
     ['admin/reports.php', 'reports.php', 'Reports', 'chart', 0, true],
     ['admin/categories.php', 'categories.php', 'Categories', 'tag', 0, true],
     ['admin/skills.php', 'skills.php', 'Skills', 'bolt', 0, true],
