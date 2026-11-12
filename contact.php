@@ -5,6 +5,19 @@ require __DIR__ . '/includes/helpers.php';
 $errors = [];
 $v = ['name' => '', 'email' => '', 'subject' => '', 'message' => ''];
 
+// Logged-in seekers/employers: the email is fixed to their account email, so the
+// admin's reply notification always reaches their account. Name is prefilled.
+$lockEmail = '';
+if (is_logged_in() && in_array($_SESSION['role'] ?? '', ['seeker', 'employer'], true)) {
+    $me = db()->prepare('SELECT full_name, email FROM users WHERE id = ?');
+    $me->execute([(int)$_SESSION['uid']]);
+    if ($r = $me->fetch()) {
+        $lockEmail = strtolower((string)$r['email']);
+        $v['email'] = $lockEmail;
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') $v['name'] = (string)$r['full_name'];
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_check()) {
         $errors[] = 'Your session expired. Please try again.';
@@ -13,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         flash('success', 'Thank you. Your message has been sent.'); redirect('contact.php');
     } else {
         foreach ($v as $k => $_) $v[$k] = trim($_POST[$k] ?? '');
-        $v['email'] = strtolower($v['email']);
+        $v['email'] = $lockEmail !== '' ? $lockEmail : strtolower($v['email']);
         if (rate_count('contact', 60) >= 3) $errors[] = 'You have sent several messages recently. Please try again in an hour.';
         if (mb_strlen($v['name']) < 2 || mb_strlen($v['name']) > 100) $errors[] = 'Enter your name (2 to 100 characters).';
         if (!filter_var($v['email'], FILTER_VALIDATE_EMAIL) || strlen($v['email']) > 190) $errors[] = 'Enter a valid email address.';
@@ -71,7 +84,8 @@ require __DIR__ . ($inDash ? '/includes/emp_top.php' : '/includes/header.php');
             </div>
             <div class="cf-field">
               <label for="c-email">Email</label>
-              <input id="c-email" name="email" type="email" maxlength="190" value="<?= e($v['email']) ?>" required>
+              <input id="c-email" name="email" type="email" maxlength="190" value="<?= e($v['email']) ?>" required<?= $lockEmail !== '' ? ' readonly aria-describedby="c-email-note"' : '' ?>>
+              <?php if ($lockEmail !== ''): ?><small id="c-email-note" style="display:block;margin-top:4px;color:#6B7C72">We will reply to your account email.</small><?php endif; ?>
             </div>
           </div>
           <div class="cf-field">
