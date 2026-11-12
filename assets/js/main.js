@@ -10,6 +10,8 @@ if (toggle && menu) {
 
 // Login / Register tabs
 function showTab(name) {
+  // Clear any login/register error message when switching tabs
+  document.querySelectorAll('.auth-card .alert').forEach(a => a.remove());
   document.querySelectorAll('.tab').forEach(t => {
     const on = t.dataset.tab === name;
     t.classList.toggle('active', on);
@@ -49,3 +51,8 @@ if (rp) {
     txt.textContent = v ? labels[s] : 'At least 8 characters with uppercase, lowercase, a number and a symbol.';
   });
 }
+
+// Clear the error message as soon as the person starts typing again
+document.querySelectorAll('.auth-card input').forEach(i =>
+  i.addEventListener('input', () => document.querySelectorAll('.auth-card .alert').forEach(a => a.remove()))
+);
