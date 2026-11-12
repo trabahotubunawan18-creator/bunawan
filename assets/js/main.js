@@ -39,13 +39,13 @@ if (rp) {
     const v = rp.value;
     let s = 0;
     if (v.length >= 8) s++;
-    if (/[A-Za-z]/.test(v) && /\d/.test(v)) s++;
-    if (v.length >= 12) s++;
+    if (/[A-Z]/.test(v) && /[a-z]/.test(v)) s++;
+    if (/\d/.test(v)) s++;
     if (/[^A-Za-z0-9]/.test(v)) s++;
     const labels = ['Too weak', 'Weak', 'Fair', 'Good', 'Strong'];
     const colors = ['#D64545', '#D64545', '#E89B0C', '#2FB463', '#1B7F45'];
     bar.style.width = (v ? (s + 1) * 20 : 0) + '%';
     bar.style.background = colors[s];
-    txt.textContent = v ? labels[s] : 'At least 8 characters with a letter and a number.';
+    txt.textContent = v ? labels[s] : 'At least 8 characters with uppercase, lowercase, a number and a symbol.';
   });
 }
