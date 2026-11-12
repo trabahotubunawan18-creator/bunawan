@@ -38,7 +38,7 @@ require_once __DIR__ . '/includes/back_button.php';
     <?= back_button('jobs.php') ?>
     <div class="ep-head">
       <div class="avatar ep-avatar" aria-hidden="true">
-        <?php if (!empty($emp['logo_path'])): ?><img src="<?= url('uploads/' . $emp['logo_path']) ?>" alt=""><?php else: ?><?= e(initials($emp['employer_name'])) ?><?php endif; ?>
+        <?php if (!empty($emp['logo_path'])): ?><img src="<?= public_file_url($emp['logo_path']) ?>" alt=""><?php else: ?><?= e(initials($emp['employer_name'])) ?><?php endif; ?>
       </div>
       <div class="ep-id">
         <h1><?= e($emp['employer_name']) ?></h1>
