@@ -207,7 +207,7 @@ require __DIR__ . '/../includes/emp_top.php';
         <p class="pay-hint">&#8369;<?= number_format(PREMIUM_PRICE) ?> per post is one month. Paying for more months? Enter the full amount you sent and we will set the duration to match.</p>
         <div class="pm-btns">
           <button class="btn btn-gold pm-cta" name="action" value="submit_payment" type="submit"><?= $sentRef ? 'Update details' : 'I have paid, send for checking' ?></button>
-          <button class="btn btn-outline" type="button" data-pay-close>Close</button>
+          <button class="btn btn-outline" type="submit" name="action" value="cancel_request" formnovalidate data-confirm="Your Premium request will be cancelled." data-confirm-title="Cancel this request?" data-confirm-ok="Cancel request" data-confirm-tone="info" data-confirm-cancel="Keep request">Cancel</button>
         </div>
       </form>
     <?php endif; ?>
