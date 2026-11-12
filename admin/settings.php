@@ -5,7 +5,7 @@ require_admin();
 $pdo = db();
 
 function delete_qr(?string $rel): void {
-    if ($rel && preg_match('#^qr/[a-f0-9]{32}\.(jpg|png)$#', $rel)) { $p = dirname(__DIR__) . '/uploads/' . $rel; if (is_file($p)) @unlink($p); }
+    delete_public($rel);
 }
 
 function save_setting(PDO $pdo, string $key, string $value): void {
@@ -126,7 +126,7 @@ require __DIR__ . '/../includes/admin_top.php';
         <input id="<?= e($k) ?>_name" name="<?= e($k) ?>_name" maxlength="80" value="<?= e($a['name']) ?>" placeholder="Name as shown in the app">
         <label class="cf-label" for="<?= e($k) ?>_qr" style="margin-top:12px!important">QR code image <span>(JPG or PNG, up to 2 MB)</span></label>
         <?php if ($a['qr']): ?>
-          <div class="pay-qr-now"><img src="<?= e(url('uploads/' . $a['qr'])) ?>" alt="<?= e($lab) ?> QR code" width="120" height="120">
+          <div class="pay-qr-now"><img src="<?= e(public_file_url($a['qr'])) ?>" alt="<?= e($lab) ?> QR code" width="120" height="120">
             <label class="check-row"><input type="checkbox" name="<?= e($k) ?>_qr_remove" value="1"> <span>Remove this QR</span></label></div>
           <p class="cf-hint" style="margin:0 0 6px">Choose a new file below to replace it.</p>
         <?php endif; ?>
