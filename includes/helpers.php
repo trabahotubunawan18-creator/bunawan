@@ -594,3 +594,27 @@ function render_skill_picker(PDO $pdo, string $id, array $selected, int $maxCust
     </div>
   </div>
 <?php }
+
+// Password rule used everywhere a password is created or changed (sign-up, change, reset).
+// Returns an error message, or null when the password is acceptable.
+function password_problem(string $pw): ?string {
+    if (strlen($pw) < 8)                    return 'Password must be at least 8 characters long.';
+    if (!preg_match('/[A-Z]/', $pw))        return 'Password must include an uppercase letter (A-Z).';
+    if (!preg_match('/[a-z]/', $pw))        return 'Password must include a lowercase letter (a-z).';
+    if (!preg_match('/\d/', $pw))           return 'Password must include a number (0-9).';
+    if (!preg_match('/[^A-Za-z0-9]/', $pw)) return 'Password must include a symbol, like ! @ # $ % & *.';
+
+    // Reject very common passwords, even when disguised (P@ssw0rd!, Qwerty123#, Admin2024!).
+    $common = ['password','passw0rd','pass','qwerty','qwertyuiop','asdfgh','asdfghjkl','zxcvbn','zxcvbnm',
+               'admin','administrator','welcome','letmein','iloveyou','princess','dragon','monkey','sunshine',
+               'football','basketball','superman','batman','login','master','hello','freedom','whatever',
+               'abc','abcdef','secret','changeme','default','trustno','bunawan','trabaho','philippines',
+               'pilipinas','jobseeker','employer','mindanao','davao','manila','lovelove','mahalkita'];
+    $lower = strtolower($pw);
+    // Undo common look-alike swaps, then keep letters only: "P@ssw0rd123!" becomes "password".
+    $core = preg_replace('/[^a-z]/', '', strtr($lower, ['@' => 'a', '$' => 's', '0' => 'o', '3' => 'e', '!' => 'i']));
+    if (in_array($core, $common, true)) return 'That password is too common. Choose something harder to guess.';
+    if (preg_match('/(.)\1{3,}/', $pw))   return 'Avoid repeating the same character many times.';
+
+    return null;
+}
