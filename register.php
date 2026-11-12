@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Step 1: account
         if (mb_strlen($v['full_name']) < 2 || mb_strlen($v['full_name']) > 100) $add(1, 'Enter your full name.');
         if (!filter_var($v['email'], FILTER_VALIDATE_EMAIL) || strlen($v['email']) > 190) $add(1, 'Enter a valid email address.');
-        if (strlen($pass) < 8 || !preg_match('/[A-Za-z]/', $pass) || !preg_match('/\d/', $pass)) $add(1, 'Password must be at least 8 characters with a letter and a number.');
+        if ($pw_err = password_problem($pass)) $add(1, $pw_err);
         if ($pass !== $pass2) $add(1, 'The two passwords do not match.');
 
         // Step 2: type and name
@@ -205,7 +205,7 @@ function val(array $v, string $k): string { return e($v[$k] ?? ''); }
             <div><label for="e-pass">Password</label>
               <div class="pw"><input id="e-pass" name="password" type="password" minlength="8" autocomplete="new-password" required>
                 <button type="button" class="pw-btn" data-toggle-pw="e-pass">Show</button></div>
-              <div class="meter"><span id="e-meter"></span></div><small class="small" id="e-meter-text">At least 8 characters with a letter and a number.</small></div>
+              <div class="meter"><span id="e-meter"></span></div><small class="small" id="e-meter-text">At least 8 characters with uppercase, lowercase, a number and a symbol.</small></div>
             <div><label for="e-pass2">Confirm password</label>
               <input id="e-pass2" name="password2" type="password" autocomplete="new-password" required></div>
           </div>
