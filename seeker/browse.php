@@ -96,7 +96,10 @@ require __DIR__ . '/../includes/dash_top.php';
     <h1 class="dash-title bj-title">Browse jobs</h1>
     <p class="bj-sub">Local vacancies in Bunawan. Save the ones you like, or apply right away.</p>
   </div>
-  <span class="bj-count"><b><?= number_format($total) ?></b> <?= $total === 1 ? 'job' : 'jobs' ?> found<?= $search !== '' ? ' for “' . e($search) . '”' : '' ?></span>
+  <div class="bj-head-end">
+    <?php if ($active): ?><a class="bj-clear-top" href="<?= url('seeker/browse.php') ?>">&#10005; Clear filters</a><?php endif; ?>
+    <span class="bj-count"><b><?= number_format($total) ?></b> <?= $total === 1 ? 'job' : 'jobs' ?> found<?= $search !== '' ? ' for “' . e($search) . '”' : '' ?></span>
+  </div>
 </header>
 
 <form method="get" action="<?= url('seeker/browse.php') ?>" class="card form filterbar bj-filters">
@@ -125,7 +128,6 @@ require __DIR__ . '/../includes/dash_top.php';
         <option value="oldest" <?= $sort === 'oldest' ? 'selected' : '' ?>>Oldest first</option>
         <option value="deadline" <?= $sort === 'deadline' ? 'selected' : '' ?>>Nearest deadline</option>
         <option value="match" <?= $sort === 'match' ? 'selected' : '' ?>>Best skills match</option></select></span>
-      <?php if ($active): ?><a class="bj-clear" href="<?= url('seeker/browse.php') ?>">Clear filters</a><?php endif; ?>
     </span>
   </div>
 </form>
