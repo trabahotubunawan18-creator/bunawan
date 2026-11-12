@@ -125,7 +125,7 @@ require __DIR__ . '/../includes/emp_top.php';
 <ol class="track" aria-label="Verification progress">
   <li class="done">Application submitted</li>
   <li class="<?= $stage === 2 ? 'now' : 'done' ?>">Under review</li>
-  <li class="<?= $stage === 3 ? 'now' : '' ?>"><?= $stage === 3 ? e($vLabel) : 'Decision' ?></li>
+  <li class="<?= $stage === 3 ? ($canPost ? 'done' : 'now') : '' ?>"><?= $stage === 3 ? e($vLabel) : 'Decision' ?></li>
 </ol>
 
 <div class="duo" style="margin-top:22px">
