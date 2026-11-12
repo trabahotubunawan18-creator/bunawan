@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     elseif ($act === 'password') {
         $new = $_POST['new'] ?? '';
-        if (strlen($new) < 8 || !preg_match('/[A-Za-z]/', $new) || !preg_match('/\d/', $new)) $errors[] = 'New password must be at least 8 characters with a letter and a number.';
+        if ($pw_err = password_problem($new)) $errors[] = $pw_err;
         elseif ($new !== ($_POST['new2'] ?? '')) $errors[] = 'The two new passwords do not match.';
         elseif (password_verify($new, $me['password_hash'])) $errors[] = 'Your new password must be different from the current one.';
         else {
@@ -112,7 +112,7 @@ require __DIR__ . '/../includes/emp_top.php';
     <?= csrf_field() ?><input type="hidden" name="action" value="password">
     <div class="emp-panel-head">
       <span class="emp-panel-ico tone-leaf"><?= icon('lock', 18) ?></span>
-      <div><h2>Change password</h2><p>Use at least 8 characters with a letter and a number.</p></div>
+      <div><h2>Change password</h2><p>Use at least 8 characters with uppercase, lowercase, a number and a symbol.</p></div>
     </div>
     <div class="set-pw">
       <div><label for="s-cur1">Current password</label><input id="s-cur1" name="current" type="password" autocomplete="current-password" required></div>
