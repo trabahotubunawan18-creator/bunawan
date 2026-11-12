@@ -71,7 +71,7 @@
     }
     if (cur === 0) {
       const p = document.getElementById('e-pass'), p2 = document.getElementById('e-pass2');
-      if (!/[A-Za-z]/.test(p.value) || !/\d/.test(p.value)) { p.setCustomValidity('Use at least one letter and one number.'); p.reportValidity(); p.setCustomValidity(''); return false; }
+      if (!/[A-Z]/.test(p.value) || !/[a-z]/.test(p.value) || !/\d/.test(p.value) || !/[^A-Za-z0-9]/.test(p.value)) { p.setCustomValidity('Use uppercase, lowercase, a number and a symbol.'); p.reportValidity(); p.setCustomValidity(''); return false; }
       if (p.value !== p2.value) { p2.setCustomValidity('The two passwords do not match.'); p2.reportValidity(); p2.setCustomValidity(''); return false; }
     }
     return true;
@@ -110,12 +110,12 @@
   if (pw) pw.addEventListener('input', () => {
     const v = pw.value; let s = 0;
     if (v.length >= 8) s++;
-    if (/[A-Za-z]/.test(v) && /\d/.test(v)) s++;
-    if (v.length >= 12) s++;
+    if (/[A-Z]/.test(v) && /[a-z]/.test(v)) s++;
+    if (/\d/.test(v)) s++;
     if (/[^A-Za-z0-9]/.test(v)) s++;
     bar.style.width = (v ? (s + 1) * 20 : 0) + '%';
     bar.style.background = ['#D64545', '#D64545', '#E89B0C', '#2FB463', '#1B7F45'][s];
-    txt.textContent = v ? ['Too weak', 'Weak', 'Fair', 'Good', 'Strong'][s] : 'At least 8 characters with a letter and a number.';
+    txt.textContent = v ? ['Too weak', 'Weak', 'Fair', 'Good', 'Strong'][s] : 'At least 8 characters with uppercase, lowercase, a number and a symbol.';
   });
 
   show(cur);
