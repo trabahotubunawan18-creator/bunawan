@@ -146,6 +146,7 @@ $cssVer = filemtime(__DIR__ . '/../assets/css/style.css');
     </section>
     <p class="al-copy">&copy; <?= date('Y') ?> Trabaho Tu Bunawan &middot; Local Skills. Local Jobs. Better Futures.</p>
   </main>
+<script src="<?= url('assets/js/confirm.js') ?>?v=<?= filemtime(__DIR__ . '/../assets/js/confirm.js') ?>"></script>
 <script>
 (function(){
   var pass=document.getElementById('a-pass'),eye=document.getElementById('al-eye'),caps=document.getElementById('al-caps'),
