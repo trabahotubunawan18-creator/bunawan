@@ -4185,3 +4185,8 @@ body.xp-open{overflow:hidden}
   .grid > .job .job-btns{width:100%;display:flex;gap:8px}
   .grid > .job .job-btns>a.btn{flex:1;justify-content:center}
 }
+
+/* ---------- Browse: "Clear filters" lives in the green header, so the filter box never changes ---------- */
+.bj-head-end{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.bj-clear-top{color:#fff;font-size:13px;font-weight:600;padding:6px 12px;border:1px solid rgba(255,255,255,.55);border-radius:99px;white-space:nowrap}
+.bj-clear-top:hover{background:rgba(255,255,255,.16);color:#fff}
