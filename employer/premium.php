@@ -167,7 +167,7 @@ require __DIR__ . '/../includes/emp_top.php';
     <?php else: ?>
       <h3 class="pm-sub">1. Send the payment</h3>
       <div class="pay-grid">
-        <?php if ($acc['qr'] !== ''): $qrUrl = url('uploads/' . $acc['qr']); ?>
+        <?php if ($acc['qr'] !== ''): $qrUrl = public_file_url($acc['qr']); ?>
         <div class="pay-qr">
           <div class="pay-qr-frame"><img src="<?= e($qrUrl) ?>" alt="<?= e($mLabel) ?> QR code" width="160" height="160"></div>
           <a class="pay-save" href="<?= e($qrUrl) ?>" download="<?= e(strtolower($mLabel)) ?>-qr.<?= e(pathinfo($acc['qr'], PATHINFO_EXTENSION)) ?>">Save QR image</a>
