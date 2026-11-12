@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_check()) { flash('error', 'Your session expired. Please try again.'); redirect($backUrl); }
     $act = $_POST['action'] ?? '';
     $id  = (int)($_POST['id'] ?? 0);
-    $s = $pdo->prepare('SELECT id, status FROM contact_messages WHERE id = ?');
+    $s = $pdo->prepare('SELECT id, status, email FROM contact_messages WHERE id = ?');
     $s->execute([$id]);
     $row = $s->fetch();
     if (!$row) { flash('error', 'That message no longer exists.'); redirect($backUrl); }
@@ -28,7 +28,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($setStatus[$act])) {
         $pdo->prepare('UPDATE contact_messages SET status = ? WHERE id = ?')->execute([$setStatus[$act], $id]);
         log_admin('contact_message_' . $setStatus[$act], 'contact_message', $id);
-        flash('success', $done[$act]);
+        $msg = $done[$act];
+
+        // When a message is marked as replied, tell the sender inside the system
+        // (only works if a seeker/employer account uses the same email address).
+        if ($act === 'replied' && $row['status'] !== 'replied') {
+            $u = $pdo->prepare("SELECT id FROM users WHERE email = ? AND role IN ('seeker','employer') AND status = 'active' LIMIT 1");
+            $u->execute([$row['email']]);
+            if ($uid = $u->fetchColumn()) {
+                $pdo->prepare('INSERT INTO notifications (user_id, message, link) VALUES (?,?,NULL)')
+                    ->execute([(int)$uid, 'We replied to your message. Please check your email.']);
+                $msg .= ' The user was also notified in the system.';
+            } else {
+                $msg .= ' No account uses this email, so only the email reply was sent.';
+            }
+        }
+        flash('success', $msg);
     } elseif ($act === 'delete') {
         $pdo->prepare('DELETE FROM contact_messages WHERE id = ?')->execute([$id]);
         log_admin('contact_message_deleted', 'contact_message', $id);
