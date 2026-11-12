@@ -48,7 +48,7 @@ require __DIR__ . '/../includes/dash_top.php';
     $left = days_left($j['deadline']);
     $open = $j['status'] === 'approved' && $left >= 0; ?>
     <article class="card sv-row<?= $open ? '' : ' is-closed' ?>">
-      <div class="avatar sv-av" aria-hidden="true"><?php if (!empty($j['logo_path'])): ?><img src="<?= url('uploads/' . $j['logo_path']) ?>" alt=""><?php else: ?><?= e(initials($j['employer_name'])) ?><?php endif; ?></div>
+      <div class="avatar sv-av" aria-hidden="true"><?php if (!empty($j['logo_path'])): ?><img src="<?= public_file_url($j['logo_path']) ?>" alt=""><?php else: ?><?= e(initials($j['employer_name'])) ?><?php endif; ?></div>
       <div class="sv-main">
         <h3><?= $open ? '<a href="' . url('job.php?id=' . (int)$j['id']) . '">' . e($j['title']) . '</a>' : e($j['title']) ?></h3>
         <p class="sv-meta"><?= e($j['employer_name']) ?> &middot; <?= icon('pin', 13) ?> <?= e($j['barangay']) ?> &middot; <?= e(type_label($j['employment_type'])) ?></p>
