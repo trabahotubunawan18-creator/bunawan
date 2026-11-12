@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (mb_strlen($old['name']) < 2 || mb_strlen($old['name']) > 100) $errors[] = 'Enter your full name (2 to 100 characters).';
             if (!filter_var($old['email'], FILTER_VALIDATE_EMAIL) || strlen($old['email']) > 190) $errors[] = 'Enter a valid email address.';
             if (!preg_match('/^(09|\+639)\d{9}$/', $old['phone'])) $errors[] = 'Enter a valid Philippine mobile number, like 09123456789.';
-            if (strlen($pass) < 8 || !preg_match('/[A-Za-z]/', $pass) || !preg_match('/\d/', $pass)) $errors[] = 'Password must be at least 8 characters and include a letter and a number.';
+            if ($pw_err = password_problem($pass)) $errors[] = $pw_err;
             if ($pass !== $pass2) $errors[] = 'The two passwords do not match.';
             if (empty($_POST['agree'])) $errors[] = 'Please accept the Terms and Privacy Policy to continue.';
 
@@ -146,7 +146,7 @@ require __DIR__ . '/includes/header.php';
         <label for="r-pass">Password</label>
         <div class="pw"><input id="r-pass" name="password" type="password" autocomplete="new-password" minlength="8" required>
           <button type="button" class="pw-btn" data-toggle-pw="r-pass">Show</button></div>
-        <div class="meter" aria-live="polite"><span id="meter-bar"></span></div><small id="meter-text" class="small">At least 8 characters with a letter and a number.</small>
+        <div class="meter" aria-live="polite"><span id="meter-bar"></span></div><small id="meter-text" class="small">At least 8 characters with uppercase, lowercase, a number and a symbol.</small>
         <label for="r-pass2">Confirm password</label>
         <input id="r-pass2" name="password2" type="password" autocomplete="new-password" required>
         <label class="check-row"><input type="checkbox" name="agree" value="1"> <span>I agree to the <a href="<?= url('terms.php') ?>">Terms</a> and <a href="<?= url('privacy.php') ?>">Privacy Policy</a>.</span></label>
