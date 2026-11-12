@@ -76,7 +76,7 @@ require __DIR__ . '/../includes/emp_top.php';
   <div class="card panel-card">
   <h2 class="pj-h">Logo and name</h2>
   <div class="logo-row">
-    <span class="av av-lg"><?php if ($p['logo_path']): ?><img src="<?= url('uploads/' . $p['logo_path']) ?>" alt="Current logo"><?php else: ?><?= e(initials($p['employer_name'])) ?><?php endif; ?></span>
+    <span class="av av-lg"><?php if ($p['logo_path']): ?><img src="<?= public_file_url($p['logo_path']) ?>" alt="Current logo"><?php else: ?><?= e(initials($p['employer_name'])) ?><?php endif; ?></span>
     <div style="flex:1;min-width:220px">
       <label for="c-logo" style="margin-top:0">Logo or photo (JPG or PNG, up to 1 MB)</label>
       <input id="c-logo" name="logo" type="file" accept=".jpg,.jpeg,.png">
@@ -121,7 +121,7 @@ require __DIR__ . '/../includes/emp_top.php';
 <aside class="pj-side">
   <p class="side-note">How you appear to job seekers</p>
   <div class="card panel-card ep-me">
-    <span class="av av-lg"><?php if ($p['logo_path']): ?><img src="<?= url('uploads/' . $p['logo_path']) ?>" alt=""><?php else: ?><?= e(initials($p['employer_name'])) ?><?php endif; ?></span>
+    <span class="av av-lg"><?php if ($p['logo_path']): ?><img src="<?= public_file_url($p['logo_path']) ?>" alt=""><?php else: ?><?= e(initials($p['employer_name'])) ?><?php endif; ?></span>
     <b><?= e($p['employer_name']) ?></b>
     <span class="vs <?= e($vClass) ?>"><?= $canPost ? icon('check', 12) : '' ?> <?= e($vLabel) ?></span>
     <p class="small"><?= e($typeLabel) ?></p>
