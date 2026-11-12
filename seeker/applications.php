@@ -80,7 +80,7 @@ require __DIR__ . '/../includes/dash_top.php';
     $steps = ['Pending', 'Reviewed', 'Shortlisted', $a['status'] === 'rejected' ? 'Rejected' : 'Accepted']; ?>
     <article class="card ap-card a-<?= e($a['status']) ?>">
       <div class="ap-top">
-        <div class="avatar ap-av" aria-hidden="true"><?php if (!empty($a['logo_path'])): ?><img src="<?= url('uploads/' . $a['logo_path']) ?>" alt=""><?php else: ?><?= e(initials($a['employer_name'])) ?><?php endif; ?></div>
+        <div class="avatar ap-av" aria-hidden="true"><?php if (!empty($a['logo_path'])): ?><img src="<?= public_file_url($a['logo_path']) ?>" alt=""><?php else: ?><?= e(initials($a['employer_name'])) ?><?php endif; ?></div>
         <div class="ap-main">
           <h3><?= $stillOpen ? '<a href="' . url('job.php?id=' . (int)$a['job_id']) . '">' . e($a['title']) . '</a>' : e($a['title']) ?></h3>
           <p class="ap-meta"><?= e($a['employer_name']) ?> &middot; <?= icon('pin', 13) ?> <?= e($a['barangay']) ?> &middot; applied <?= e(date('M j, Y', strtotime($a['applied_at']))) ?></p>
