@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/storage.php';
 // Safe upload helper. Private files are stored OUTSIDE htdocs (C:\myxampp\tbb_private\...),
 // so nobody can open them by typing a URL. They are served only by PHP scripts that check permission.
 // Where private files live. On XAMPP this is the same folder as before (next to htdocs).
@@ -24,7 +25,9 @@ function save_private_upload(array $f, array $allowed, int $maxBytes, string $su
     $mime = (new finfo(FILEINFO_MIME_TYPE))->file($f['tmp_name']);
     if (!in_array($mime, $allowed[$ext], true)) return [null, 'That file does not look like a real ' . strtoupper($ext) . ' file.'];
     $name = bin2hex(random_bytes(16)) . '.' . $ext;
-    if (!move_uploaded_file($f['tmp_name'], private_dir($sub) . '/' . $name)) return [null, 'The file could not be saved.'];
+    if (storage_on()) {
+        if (!storage_put(STORAGE_PRIVATE_BUCKET, $sub . '/' . $name, (string)file_get_contents($f['tmp_name']), storage_mime($ext))) return [null, 'The file could not be saved.'];
+    } elseif (!move_uploaded_file($f['tmp_name'], private_dir($sub) . '/' . $name)) return [null, 'The file could not be saved.'];
     return [$sub . '/' . $name, null];
 }
 
@@ -48,7 +51,14 @@ const ID_TYPES = [
 ];
 function private_path(string $rel): string { return private_base() . '/' . $rel; }
 function delete_private(?string $rel): void {
-    if ($rel && preg_match('#^[a-z]+/[a-f0-9]{32}\.[a-z]{3,4}$#', $rel) && is_file(private_path($rel))) @unlink(private_path($rel));
+    if (!$rel || !preg_match('#^[a-z]+/[a-f0-9]{32}\.[a-z]{3,4}$#', $rel)) return;
+    if (storage_on()) { storage_delete(STORAGE_PRIVATE_BUCKET, $rel); return; }
+    if (is_file(private_path($rel))) @unlink(private_path($rel));
+}
+// Returns the file's contents, or null if it does not exist. Used by the permission-checked download pages.
+function private_read(string $rel): ?string {
+    if (storage_on()) return storage_get(STORAGE_PRIVATE_BUCKET, $rel);
+    return is_file(private_path($rel)) ? (string)file_get_contents(private_path($rel)) : null;
 }
 
 // Public image upload (company logos). Verified with getimagesize, saved under uploads/<sub>/ with a random name.
@@ -60,12 +70,18 @@ function save_public_image(array $f, string $sub, int $maxBytes): array {
     $ext = $info ? [IMAGETYPE_JPEG => 'jpg', IMAGETYPE_PNG => 'png'][$info[2]] ?? null : null;
     if (!$ext) return [null, 'Please upload a JPG or PNG image.'];
     if ($info[0] > 4000 || $info[1] > 4000) return [null, 'The image is too large in pixels. Please use one under 4000 px.'];
+    $name = bin2hex(random_bytes(16)) . '.' . $ext;
+    if (storage_on()) {
+        if (!storage_put(STORAGE_PUBLIC_BUCKET, $sub . '/' . $name, (string)file_get_contents($f['tmp_name']), storage_mime($ext))) return [null, 'The image could not be saved.'];
+        return [$sub . '/' . $name, null];
+    }
     $dir = dirname(__DIR__) . '/uploads/' . $sub;
     if (!is_dir($dir)) mkdir($dir, 0775, true);
-    $name = bin2hex(random_bytes(16)) . '.' . $ext;
     if (!move_uploaded_file($f['tmp_name'], $dir . '/' . $name)) return [null, 'The image could not be saved.'];
     return [$sub . '/' . $name, null];
 }
 function delete_public(?string $rel): void {
-    if ($rel && preg_match('#^logos/[a-f0-9]{32}\.(jpg|png)$#', $rel)) { $p = dirname(__DIR__) . '/uploads/' . $rel; if (is_file($p)) @unlink($p); }
+    if (!$rel || !preg_match('#^(logos|qr)/[a-f0-9]{32}\.(jpg|png)$#', $rel)) return;
+    if (storage_on()) { storage_delete(STORAGE_PUBLIC_BUCKET, $rel); return; }
+    $p = dirname(__DIR__) . '/uploads/' . $rel; if (is_file($p)) @unlink($p);
 }
