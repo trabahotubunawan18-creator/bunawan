@@ -35,6 +35,12 @@ require __DIR__ . ($inDash ? '/includes/emp_top.php' : '/includes/header.php');
 ?>
 <?php if ($inDash): ?>
 <div class="emp-page emp-contact">
+  <div class="back-row-emp" style="margin-bottom:14px">
+    <a class="back-btn" href="<?= e(url('employer/settings.php')) ?>">
+      <svg class="ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+      <span>Back</span>
+    </a>
+  </div>
   <div class="emp-hero">
     <div>
       <h1>Contact us</h1>
