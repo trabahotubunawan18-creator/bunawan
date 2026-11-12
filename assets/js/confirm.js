@@ -148,3 +148,56 @@
     });
   });
 })();
+
+/* Messages: top banners (flash) auto-dismiss; form error boxes clear when the person starts fixing the form.
+   Both get a close (X) button. Handles seeker, employer, admin, login and public pages. */
+(function () {
+  function addClose(box, dismiss) {
+    box.classList.add('alert-flash');
+    var x = document.createElement('button');
+    x.type = 'button';
+    x.className = 'alert-close';
+    x.setAttribute('aria-label', 'Dismiss message');
+    x.innerHTML = '&times;';
+    x.addEventListener('click', dismiss);
+    box.appendChild(x);
+  }
+  function remover(box) {
+    var gone = false;
+    return function () {
+      if (gone) return;
+      gone = true;
+      box.classList.add('alert-hide');
+      setTimeout(function () { if (box.parentNode) box.parentNode.removeChild(box); }, 400);
+      return true;
+    };
+  }
+
+  // 1) Top banners (flash messages): fade out by themselves
+  var banners = document.querySelectorAll('.app-main > .alert, body > .wrap > .alert, .al-sub + .alert:not([role])');
+  banners.forEach(function (box) {
+    var timer = null, out = remover(box);
+    var delay = box.classList.contains('alert-error') ? 8000 : 5000;
+    function dismiss() { clearTimeout(timer); out(); }
+    function start() { clearTimeout(timer); timer = setTimeout(dismiss, delay); }
+    addClose(box, dismiss);
+    start();
+    box.addEventListener('mouseenter', function () { clearTimeout(timer); });
+    box.addEventListener('mouseleave', start);
+    box.addEventListener('focusin', function () { clearTimeout(timer); });
+    box.addEventListener('focusout', start);
+    document.addEventListener('click', function (ev) { if (!box.contains(ev.target)) dismiss(); });
+    document.addEventListener('input', dismiss);
+  });
+
+  // 2) Form error boxes (login, register, settings, post job, admin review...):
+  //    stay until the person starts typing or changes a field, or presses X
+  document.querySelectorAll('.alert-error:not(.alert-flash)').forEach(function (box) {
+    var out = remover(box);
+    function dismiss() { out(); }
+    addClose(box, dismiss);
+    function onEdit(ev) { if (!box.contains(ev.target)) dismiss(); }
+    document.addEventListener('input', onEdit);
+    document.addEventListener('change', onEdit);
+  });
+})();
