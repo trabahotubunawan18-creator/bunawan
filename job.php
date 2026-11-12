@@ -182,7 +182,7 @@ require __DIR__ . '/includes/' . ($inDash ? 'dash_top.php' : 'header.php');
   <?php if ($inDash): ?>
   <a class="back-link jd-back" href="<?= url('seeker/browse.php') ?>">&larr; Back to jobs</a>
   <header class="jd-head">
-    <div class="avatar jd-av" aria-hidden="true"><?php if ($job['logo_path']): ?><img src="<?= url('uploads/' . $job['logo_path']) ?>" alt=""><?php else: ?><?= e(initials($job['employer_name'])) ?><?php endif; ?></div>
+    <div class="avatar jd-av" aria-hidden="true"><?php if ($job['logo_path']): ?><img src="<?= public_file_url($job['logo_path']) ?>" alt=""><?php else: ?><?= e(initials($job['employer_name'])) ?><?php endif; ?></div>
     <div class="jd-title">
       <h1 class="dash-title"><?= e($job['title']) ?></h1>
       <p><span><?= e($job['employer_name']) ?></span><span><?= icon('pin', 14) ?> <?= e($job['barangay']) ?>, Bunawan</span><span><?= icon('briefcase', 14) ?> <?= e($job['category']) ?></span></p>
@@ -266,7 +266,7 @@ require __DIR__ . '/includes/' . ($inDash ? 'dash_top.php' : 'header.php');
       <div class="card jd-card">
         <h2 class="jd-h"><?= icon('building', 18) ?> About the employer</h2>
         <div class="jd-emp">
-          <div class="avatar jd-emp-av" aria-hidden="true"><?php if ($job['logo_path']): ?><img src="<?= url('uploads/' . $job['logo_path']) ?>" alt=""><?php else: ?><?= e(initials($job['employer_name'])) ?><?php endif; ?></div>
+          <div class="avatar jd-emp-av" aria-hidden="true"><?php if ($job['logo_path']): ?><img src="<?= public_file_url($job['logo_path']) ?>" alt=""><?php else: ?><?= e(initials($job['employer_name'])) ?><?php endif; ?></div>
           <div>
             <b><?= e($job['employer_name']) ?></b>
             <p class="jd-emp-ver"><span class="badge badge-ver"><?= icon('shield', 14) ?> <?= e(verified_label($job['verification_status'])) ?></span></p>
