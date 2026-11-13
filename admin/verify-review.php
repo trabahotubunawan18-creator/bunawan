@@ -155,8 +155,8 @@ $pageTitle = 'Review employer';
 require __DIR__ . '/../includes/admin_top.php';
 ?>
 <a class="back-link" href="<?= url('admin/verification.php') ?>">&larr; Back to queue</a>
-<div class="rv-head"><div><h1 class="dash-title" style="margin:0"><?= e($p['employer_name']) ?></h1>
-  <p class="dash-sub" style="margin:2px 0 0"><?= e($typeLabel) ?> &middot; registered <?= e(date('M j, Y', strtotime($p['registered_at']))) ?></p></div>
+<div class="rv-head"><div style="display:flex;gap:14px;align-items:center"><span class="av av-sq" style="width:56px;height:56px;border-radius:14px;font-size:18px;border:1px solid var(--line)" aria-hidden="true"><?= avatar_inner($p['logo_path'] ?? null, $p['employer_name']) ?></span><div><h1 class="dash-title" style="margin:0"><?= e($p['employer_name']) ?></h1>
+  <p class="dash-sub" style="margin:2px 0 0"><?= e($typeLabel) ?> &middot; registered <?= e(date('M j, Y', strtotime($p['registered_at']))) ?></p></div></div>
   <span class="st <?= $stCls ?>" style="font-size:14px"><?= e($vLabel) ?></span></div>
 
 <?php if ($errors): ?><div class="alert alert-error" role="alert"><ul><?php foreach ($errors as $er): ?><li><?= e($er) ?></li><?php endforeach; ?></ul></div><?php endif; ?>
