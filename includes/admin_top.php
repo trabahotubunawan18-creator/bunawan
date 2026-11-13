@@ -5,7 +5,8 @@ $cur = basename($_SERVER['SCRIPT_NAME']);
 $cnt = function (string $sql) { return (int)db()->query($sql)->fetchColumn(); };
 $nVerif  = $cnt("SELECT COUNT(*) FROM employer_profiles WHERE verification_status = 'pending'");
 $nFlag   = $cnt("SELECT COUNT(*) FROM job_posts WHERE status = 'pending'");
-$nComplaints = $cnt("SELECT COUNT(*) FROM job_reports WHERE status = 'open'");
+$nComplaints = $cnt("SELECT COUNT(*) FROM job_reports WHERE status = 'open'")
+    + (applicant_reports_ready(db()) ? $cnt("SELECT COUNT(*) FROM applicant_reports WHERE status = 'open'") : 0);
 $nContact = $cnt("SELECT COUNT(*) FROM contact_messages WHERE status = 'unread'");
 $nPremium = $cnt("SELECT COUNT(*) FROM premium_subscriptions WHERE status = 'requested'");
 $nUnread = $cnt('SELECT COUNT(*) FROM notifications WHERE user_id = ' . (int)$_SESSION['uid'] . ' AND is_read = 0');
