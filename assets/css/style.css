@@ -4219,3 +4219,10 @@ body.xp-open{overflow:hidden}
 
 /* Warn popup: keep the two buttons the same size */
 .um-pop-btns .btn{min-width:96px;justify-content:center}
+
+/* Profile pictures: company logos and job seeker photos fill any avatar shape, on every page (admin, employer, seeker). */
+.av,.um-av,.dsh-av,.pm-av,.cp-av,.cp-tile{overflow:hidden}
+.av img,.um-av img,.dsh-av img,.pm-av img,.cp-av img,.cp-tile img{display:block;width:100%;height:100%;object-fit:cover}
+.av:has(img),.um-av:has(img),.dsh-av:has(img),.pm-av:has(img),.cp-av:has(img),.cp-tile:has(img){background:#fff!important;border:1px solid var(--line)}
+.prf-photo{margin:2px 0 16px}
+.prf-photo .av-lg{border:1px solid var(--line)}
