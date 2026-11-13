@@ -80,7 +80,7 @@ $cssVer = filemtime(__DIR__ . '/../assets/css/style.css');
         <?php endif; ?>
         <a class="icon-btn" href="<?= url('employer/notifications.php') ?>" aria-label="Notifications"><?= icon('bell', 20) ?>
           <?php if ($unread > 0): ?><em class="badge-dot"><?= $unread > 9 ? '9+' : $unread ?></em><?php endif; ?></a>
-        <a class="user-chip" href="<?= url('employer/company-profile.php') ?>"><span class="av"><?= e(initials($_SESSION['name'])) ?></span><span class="uname"><?= e($first) ?></span></a>
+        <a class="user-chip" href="<?= url('employer/company-profile.php') ?>"><span class="av"><?= avatar_inner($emp['logo_path'] ?? null, $_SESSION['name']) ?></span><span class="uname"><?= e($first) ?></span></a>
       </div>
     </header>
     <main class="app-main" id="main">
