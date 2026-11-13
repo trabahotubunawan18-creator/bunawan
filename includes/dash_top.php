@@ -9,6 +9,9 @@ $q->execute([$_SESSION['uid']]);
 $unread = (int)$q->fetchColumn();
 $flash = get_flash();
 $first = explode(' ', trim($_SESSION['name']))[0];
+$navPh = db()->prepare('SELECT photo_path FROM users WHERE id = ?');
+$navPh->execute([$_SESSION['uid']]);
+$myPhoto = $navPh->fetchColumn() ?: null;   // the seeker's own profile photo, read fresh on every page
 $navItems = [
     ['seeker/index.php', 'index.php', 'Overview', 'home'],
     ['seeker/browse.php', 'browse.php', 'Browse jobs', 'search'],
@@ -66,7 +69,7 @@ $cssVer = filemtime(__DIR__ . '/../assets/css/style.css');
       <div class="top-right">
         <a class="icon-btn" href="<?= url('seeker/notifications.php') ?>" aria-label="Notifications"><?= icon('bell', 20) ?>
           <?php if ($unread > 0): ?><em class="badge-dot"><?= $unread > 9 ? '9+' : $unread ?></em><?php endif; ?></a>
-        <a class="user-chip" href="<?= url('seeker/profile.php') ?>"><span class="av"><?= e(initials($_SESSION['name'])) ?></span><span class="uname"><?= e($first) ?></span></a>
+        <a class="user-chip" href="<?= url('seeker/profile.php') ?>"><span class="av"><?= avatar_inner($myPhoto, $_SESSION['name']) ?></span><span class="uname"><?= e($first) ?></span></a>
       </div>
     </header>
     <main class="app-main" id="main">
