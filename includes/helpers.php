@@ -624,3 +624,13 @@ function public_file_url(string $rel): string {
     if (storage_on()) return rtrim(SUPABASE_URL, '/') . '/storage/v1/object/public/' . rawurlencode(STORAGE_PUBLIC_BUCKET) . '/' . $rel;
     return url('uploads/' . $rel);
 }
+
+// ---------- Applicant reports (employer reports a job seeker) ----------
+const APPLICANT_REPORT_REASONS = ['fake_identity' => 'Fake identity', 'asks_money' => 'Asking for money', 'harassment' => 'Harassment', 'spam' => 'Spam', 'other' => 'Other'];
+
+// Returns false until database/migrations/applicant_reports.sql has been run, so pages keep working instead of crashing.
+function applicant_reports_ready(PDO $pdo): bool {
+    static $ok = null;
+    if ($ok === null) { try { $pdo->query('SELECT 1 FROM applicant_reports LIMIT 1'); $ok = true; } catch (PDOException $e) { $ok = false; } }
+    return $ok;
+}
