@@ -117,10 +117,57 @@ function smtp_send(string $to, string $subject, string $body): void {
     }
 }
 
+// Reads a setting from config.local.php (define) or from a Render environment variable.
+function mail_setting(string $name): string {
+    if (defined($name)) return (string)constant($name);
+    $v = getenv($name);
+    return $v === false ? '' : (string)$v;
+}
+
+// Sends through Brevo's HTTPS email API. Works on Render's free plan (it does not use SMTP ports).
+// Needs BREVO_API_KEY and MAIL_FROM (an email address you verified as a Sender in Brevo).
+function brevo_send(string $to, string $subject, string $body): void {
+    if (!function_exists('curl_init')) throw new RuntimeException('PHP curl is not installed on this server.');
+    $from = mail_setting('MAIL_FROM');
+    if ($from === '') throw new RuntimeException('MAIL_FROM is not set. Set it to the sender email you verified in Brevo.');
+    $name = defined('SMTP_FROM_NAME') ? SMTP_FROM_NAME : 'Trabaho Tu Bunawan';
+    $payload = json_encode([
+        'sender'      => ['name' => $name, 'email' => $from],
+        'to'          => [['email' => $to]],
+        'subject'     => $subject,
+        'textContent' => $body,
+    ]);
+    $ch = curl_init('https://api.brevo.com/v3/smtp/email');
+    curl_setopt_array($ch, [
+        CURLOPT_POST           => true,
+        CURLOPT_HTTPHEADER     => ['accept: application/json', 'content-type: application/json', 'api-key: ' . mail_setting('BREVO_API_KEY')],
+        CURLOPT_POSTFIELDS     => $payload,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CONNECTTIMEOUT => 10,
+        CURLOPT_TIMEOUT        => 20,
+    ]);
+    $res  = curl_exec($ch);
+    $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $err  = curl_error($ch);
+    curl_close($ch);
+    if ($res === false) throw new RuntimeException('Could not reach the email service: ' . $err);
+    if ($code < 200 || $code >= 300) throw new RuntimeException('Email service said (' . $code . '): ' . substr((string)$res, 0, 300));
+}
+
 function send_site_mail(string $to, string $subject, string $body): bool {
     $to      = str_replace(["\r", "\n", '<', '>'], '', $to);
     $subject = str_replace(["\r", "\n"], ' ', $subject);
     mail_last_error('');
+    if (mail_setting('BREVO_API_KEY') !== '') {
+        try {
+            brevo_send($to, $subject, $body);
+            return true;
+        } catch (Throwable $ex) {
+            mail_last_error($ex->getMessage());
+            error_log('Email could not be sent: ' . $ex->getMessage());
+            return false;
+        }
+    }
     if (smtp_configured()) {
         try {
             smtp_send($to, $subject, $body);
