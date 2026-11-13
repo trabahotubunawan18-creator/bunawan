@@ -1,12 +1,13 @@
 <?php
 require __DIR__ . '/../includes/auth.php';
 require __DIR__ . '/../includes/helpers.php';
+require __DIR__ . '/../includes/upload.php';
 require_role('seeker');
 $pdo = db(); $uid = (int)$_SESSION['uid'];
 $barangays = $pdo->query('SELECT id, name FROM barangays WHERE is_active = 1 ORDER BY name')->fetchAll();
 $opts = ['part_time' => 'Part-time', 'full_time' => 'Full-time', 'weekdays' => 'Weekdays', 'weekends' => 'Weekends', 'after_school' => 'After school'];
 
-$s = $pdo->prepare('SELECT u.full_name, u.phone, sp.barangay_id, sp.birth_date, sp.education, sp.skills, sp.work_experience, sp.availability
+$s = $pdo->prepare('SELECT u.full_name, u.phone, u.photo_path, sp.barangay_id, sp.birth_date, sp.education, sp.skills, sp.work_experience, sp.availability
     FROM users u LEFT JOIN seeker_profiles sp ON sp.user_id = u.id WHERE u.id = ?');
 $s->execute([$uid]);
 $d = $s->fetch();
@@ -19,7 +20,8 @@ $v = [
 $selSkills = seeker_skill_list($pdo, $uid);   // skills chosen with the picker (old text profiles are converted on the fly)
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!csrf_check()) { $errors[] = 'Your session expired. Please try again.'; }
+    if (empty($_POST) && (int)($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) { $errors[] = 'The photo is too large. Please use one under 5 MB.'; }
+    elseif (!csrf_check()) { $errors[] = 'Your session expired. Please try again.'; }
     else {
         foreach (['full_name', 'phone', 'barangay', 'birth_date', 'education', 'work_experience'] as $k) $v[$k] = trim((string)($_POST[$k] ?? ''));
         $v['phone'] = preg_replace('/[\s-]/', '', $v['phone']);
@@ -43,9 +45,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Keep the old comma-separated column in sync so older screens still show the skills
         $v['skills'] = mb_substr(implode(', ', array_column($selSkills, 'label')), 0, 500);
 
+        $newPhoto = null;
         if (!$errors) {
+            [$newPhoto, $perr] = save_profile_photo($_FILES['photo'] ?? []);
+            if ($perr) $errors[] = $perr;
+        }
+        if (!$errors) {
+            $oldPhoto = $d['photo_path'] ?? null;
+            $photo = $oldPhoto;
+            if ($newPhoto) $photo = $newPhoto;
+            elseif (!empty($_POST['remove_photo'])) $photo = null;
             $pdo->beginTransaction();
-            $pdo->prepare('UPDATE users SET full_name = ?, phone = ? WHERE id = ?')->execute([$v['full_name'], $v['phone'], $uid]);
+            $pdo->prepare('UPDATE users SET full_name = ?, phone = ?, photo_path = ? WHERE id = ?')->execute([$v['full_name'], $v['phone'], $photo, $uid]);
+            // Applications keep a copy of the name and phone from the day you applied. Keep those copies current,
+            // so employers always see your latest details.
+            $pdo->prepare('UPDATE job_applications SET applicant_name = ?, applicant_phone = ? WHERE seeker_id = ?')->execute([$v['full_name'], $v['phone'], $uid]);
             $pdo->prepare('INSERT INTO seeker_profiles (user_id, barangay_id, birth_date, education, skills, work_experience, availability)
                 VALUES (?,?,?,?,?,?,?)
                 ON CONFLICT (user_id) DO UPDATE SET barangay_id = EXCLUDED.barangay_id, birth_date = EXCLUDED.birth_date, education = EXCLUDED.education,
@@ -53,11 +67,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ->execute([$uid, $bid, $bd, $v['education'] ?: null, $v['skills'] ?: null, $v['work_experience'] ?: null, $v['avail'] ? implode(',', $v['avail']) : null]);
             if (skills_ready($pdo)) skills_save($pdo, 'seeker_skills', $uid, $selSkills);
             $pdo->commit();
+            if ($oldPhoto && $oldPhoto !== $photo) delete_public($oldPhoto);   // the old picture is no longer used anywhere
             if (skills_ready($pdo)) skills_auto_promote($pdo, $selSkills);
             $_SESSION['name'] = $v['full_name'];
             flash('success', 'Your profile was saved.');
             redirect('seeker/profile.php');
-        }
+        } elseif ($newPhoto) delete_public($newPhoto);
     }
 }
 // Profile checklist: same six items as the Overview page, based on what is saved
@@ -78,17 +93,26 @@ require __DIR__ . '/../includes/dash_top.php';
 <header class="pf-head">
   <div>
     <h1 class="dash-title pf-title">My profile</h1>
-    <p class="pf-sub">Employers only see your name, phone, and message when you apply. Your other details stay on your account.</p>
+    <p class="pf-sub">When you apply for a job, that employer can see your photo, name, contact details, and the profile information below. Site admins can see it too. Nobody else can browse your profile.</p>
   </div>
   <span class="pf-pill"><b><?= $pct ?>%</b> complete</span>
 </header>
 <?php if ($errors): ?><div class="alert alert-error" role="alert"><ul><?php foreach ($errors as $er): ?><li><?= e($er) ?></li><?php endforeach; ?></ul></div><?php endif; ?>
 
 <div class="prf">
-<form method="post" class="form prf-form" novalidate>
+<form method="post" class="form prf-form" enctype="multipart/form-data" novalidate>
   <?= csrf_field() ?>
   <section class="card prf-sec">
     <h2 class="prf-h"><?= icon('user', 18) ?> Basic information</h2>
+    <div class="logo-row prf-photo">
+      <span class="av av-lg" id="photo-prev"><?= avatar_inner($d['photo_path'] ?? null, $d['full_name']) ?></span>
+      <div style="flex:1;min-width:220px">
+        <label for="p-photo" style="margin-top:0">Profile photo (JPG or PNG, up to 5 MB)</label>
+        <input id="p-photo" name="photo" type="file" accept=".jpg,.jpeg,.png">
+        <p class="small" style="margin:4px 0 0">A clear face photo helps employers recognise you. It is saved as a small square picture.</p>
+        <?php if (!empty($d['photo_path'])): ?><label class="check-row"><input type="checkbox" name="remove_photo" value="1"> <span>Remove current photo</span></label><?php endif; ?>
+      </div>
+    </div>
     <div class="prf-grid">
       <div><label for="p-name">Full name</label><input id="p-name" name="full_name" maxlength="100" value="<?= e($v['full_name']) ?>" required></div>
       <div><label for="p-phone">Mobile number</label><input id="p-phone" name="phone" type="tel" placeholder="09123456789" value="<?= e($v['phone']) ?>" required></div>
@@ -128,7 +152,7 @@ require __DIR__ . '/../includes/dash_top.php';
 <aside class="prf-side">
   <div class="card prf-card">
     <div class="prf-who">
-      <span class="avatar prf-av" aria-hidden="true"><?= e(initials($d['full_name'])) ?></span>
+      <span class="avatar prf-av" aria-hidden="true"><?= avatar_inner($d['photo_path'] ?? null, $d['full_name']) ?></span>
       <div><b><?= e($d['full_name']) ?></b><span><?= e(implode(' · ', array_filter([$d['phone'] ?? '', $myBrgy]))) ?></span></div>
     </div>
     <div class="prf-strength"><span>Profile strength</span><b><?= $pct ?>%</b></div>
@@ -147,4 +171,18 @@ require __DIR__ . '/../includes/dash_top.php';
 </aside>
 </div>
 </div>
+<script>
+// Show the chosen photo right away, before saving
+(function () {
+  var inp = document.getElementById('p-photo'), box = document.getElementById('photo-prev');
+  if (!inp || !box) return;
+  inp.addEventListener('change', function () {
+    var f = inp.files && inp.files[0];
+    if (!f || !/^image\//.test(f.type)) return;
+    var r = new FileReader();
+    r.onload = function (e) { box.innerHTML = ''; var im = document.createElement('img'); im.src = e.target.result; im.alt = ''; box.appendChild(im); };
+    r.readAsDataURL(f);
+  });
+})();
+</script>
 <?php require __DIR__ . '/../includes/dash_bottom.php'; ?>
