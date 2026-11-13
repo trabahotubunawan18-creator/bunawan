@@ -81,7 +81,47 @@ function save_public_image(array $f, string $sub, int $maxBytes): array {
     return [$sub . '/' . $name, null];
 }
 function delete_public(?string $rel): void {
-    if (!$rel || !preg_match('#^(logos|qr)/[a-f0-9]{32}\.(jpg|png)$#', $rel)) return;
+    if (!$rel || !preg_match('#^(logos|qr|avatars)/[a-f0-9]{32}\.(jpg|png)$#', $rel)) return;
     if (storage_on()) { storage_delete(STORAGE_PUBLIC_BUCKET, $rel); return; }
     $p = dirname(__DIR__) . '/uploads/' . $rel; if (is_file($p)) @unlink($p);
+}
+
+// Profile photo (job seekers). Saved in the public area under avatars/ so it can be shown on any page.
+// When the GD extension is installed (it is in the Dockerfile) the picture is also turned into a 400 px square JPEG:
+// pages stay fast even with big phone photos, and the GPS / camera details phones hide inside photos are removed.
+// Without GD it falls back to the same rules as company logos (JPG or PNG, up to 1 MB).
+function save_profile_photo(array $f, string $sub = 'avatars'): array {
+    if (!isset($f['error']) || $f['error'] === UPLOAD_ERR_NO_FILE) return [null, null];
+    $gd = function_exists('imagecreatefromjpeg') && function_exists('imagecreatefrompng') && function_exists('imagejpeg');
+    if ($f['error'] === UPLOAD_ERR_INI_SIZE || $f['error'] === UPLOAD_ERR_FORM_SIZE) return [null, 'The photo is too large. Please use one under ' . ($gd ? 5 : 1) . ' MB.'];
+    if (!$gd) return save_public_image($f, $sub, 1048576);
+    if ($f['error'] !== UPLOAD_ERR_OK) return [null, 'The photo could not be uploaded. Please try again.'];
+    if ($f['size'] > 5 * 1048576) return [null, 'The photo is too large. Please use one under 5 MB.'];
+    $info = @getimagesize($f['tmp_name']);
+    if (!$info || !in_array($info[2], [IMAGETYPE_JPEG, IMAGETYPE_PNG], true)) return [null, 'Please upload a JPG or PNG photo.'];
+    if ($info[0] * $info[1] > 16000000) return [null, 'The photo is too large in pixels. Please use a smaller one.'];
+    $src = $info[2] === IMAGETYPE_JPEG ? @imagecreatefromjpeg($f['tmp_name']) : @imagecreatefrompng($f['tmp_name']);
+    if (!$src) return [null, 'That photo could not be read. Please try another one.'];
+    // Phones save a sideways picture plus a "rotate me" note. Apply the note, since the re-saved copy has no notes.
+    if ($info[2] === IMAGETYPE_JPEG && function_exists('exif_read_data')) {
+        $ex = @exif_read_data($f['tmp_name']);
+        $rot = [3 => 180, 6 => -90, 8 => 90][is_array($ex) ? ($ex['Orientation'] ?? 1) : 1] ?? 0;
+        if ($rot) { $r = imagerotate($src, $rot, 0); if ($r) { imagedestroy($src); $src = $r; } }
+    }
+    $w = imagesx($src); $h = imagesy($src); $side = min($w, $h);
+    $out = imagecreatetruecolor(400, 400);
+    imagefill($out, 0, 0, imagecolorallocate($out, 255, 255, 255));   // transparent PNG areas become white
+    imagecopyresampled($out, $src, 0, 0, intdiv($w - $side, 2), intdiv($h - $side, 2), 400, 400, $side, $side);
+    ob_start(); imagejpeg($out, null, 85); $jpg = (string)ob_get_clean();
+    imagedestroy($src); imagedestroy($out);
+    if ($jpg === '') return [null, 'The photo could not be saved.'];
+    $name = bin2hex(random_bytes(16)) . '.jpg';
+    if (storage_on()) {
+        if (!storage_put(STORAGE_PUBLIC_BUCKET, $sub . '/' . $name, $jpg, 'image/jpeg')) return [null, 'The photo could not be saved.'];
+        return [$sub . '/' . $name, null];
+    }
+    $dir = dirname(__DIR__) . '/uploads/' . $sub;
+    if (!is_dir($dir)) mkdir($dir, 0775, true);
+    if (file_put_contents($dir . '/' . $name, $jpg) === false) return [null, 'The photo could not be saved.'];
+    return [$sub . '/' . $name, null];
 }
