@@ -17,6 +17,37 @@ $back = 'employer/applicants.php' . ($keep ? '?' . http_build_query($keep) : '')
 // ---------- Change an applicant's status ----------
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_check()) { flash('error', 'Your session expired. Please try again.'); redirect($back); }
+
+    // ---------- Report an applicant to the admin ----------
+    if (($_POST['action'] ?? '') === 'report') {
+        $appId = (int)($_POST['id'] ?? 0);
+        $reason = $_POST['reason'] ?? '';
+        $details = mb_substr(trim($_POST['details'] ?? ''), 0, 500);
+        // Only your own jobs' applicants
+        $s = $pdo->prepare('SELECT a.id, a.seeker_id, a.job_id, a.applicant_name FROM job_applications a JOIN job_posts j ON j.id = a.job_id WHERE a.id = ? AND j.employer_id = ?');
+        $s->execute([$appId, $uid]);
+        $app = $s->fetch();
+        if (!applicant_reports_ready($pdo)) flash('error', 'Reporting is not available right now. Please try again later.');
+        elseif (!$app) flash('error', 'That application was not found.');
+        elseif (!array_key_exists($reason, APPLICANT_REPORT_REASONS)) flash('error', 'Choose a reason for your report.');
+        elseif ($reason === 'other' && mb_strlen($details) < 10) flash('error', 'Please describe what happened (at least 10 characters).');
+        elseif (rate_count('applicant_report', 60) >= 5) flash('error', 'You have sent several reports recently. Please try again later.');
+        else {
+            $dup = $pdo->prepare("SELECT 1 FROM applicant_reports WHERE employer_id = ? AND seeker_id = ? AND status = 'open'");
+            $dup->execute([$uid, $app['seeker_id']]);
+            if ($dup->fetchColumn()) flash('info', 'You already reported this applicant. The admin team is reviewing it.');
+            else {
+                rate_hit('applicant_report');
+                $pdo->prepare('INSERT INTO applicant_reports (application_id, seeker_id, employer_id, job_id, reason, details) VALUES (?,?,?,?,?,?)')
+                    ->execute([$app['id'], $app['seeker_id'], $uid, $app['job_id'], $reason, $details !== '' ? $details : null]);
+                require_once __DIR__ . '/../includes/redflags.php';
+                notify_admins($pdo, 'An employer reported an applicant: ' . mb_substr($app['applicant_name'], 0, 80), 'admin/complaints.php?type=applicants');
+                flash('success', 'Thank you. The admin team will review your report. The applicant is not told who reported them.');
+            }
+        }
+        redirect($back);
+    }
+
     $appId = (int)($_POST['id'] ?? 0);
     $to = $_POST['to'] ?? '';
     $msg = mb_substr(trim($_POST['message'] ?? ''), 0, 255);
@@ -86,6 +117,16 @@ unset($a);
 if ($sortBy === 'match') {
     usort($rows, fn($x, $y) => ((int)($y['match']['pct'] ?? -1) <=> (int)($x['match']['pct'] ?? -1)) ?: strcmp((string)$y['applied_at'], (string)$x['applied_at']));
     $rows = array_slice($rows, ($page - 1) * $per, $per);
+}
+
+// Applicants this employer has already reported and the admin has not handled yet
+$reportsOn = applicant_reports_ready($pdo);
+$reportedSeekers = [];
+if ($rows && $reportsOn) {
+    $sids = array_values(array_unique(array_map('intval', array_column($rows, 'seeker_id'))));
+    $rq = $pdo->prepare("SELECT DISTINCT seeker_id FROM applicant_reports WHERE employer_id = ? AND status = 'open' AND seeker_id IN (" . implode(',', array_fill(0, count($sids), '?')) . ')');
+    $rq->execute(array_merge([$uid], $sids));
+    $reportedSeekers = array_flip(array_map('intval', $rq->fetchAll(PDO::FETCH_COLUMN)));
 }
 
 $base = url('employer/applicants.php?' . http_build_query(array_filter(['status' => $tab, 'job' => $jobId ?: '', 'q' => $search, 'sort' => $sortBy === 'match' ? 'match' : ''])));
@@ -187,6 +228,27 @@ require __DIR__ . '/../includes/emp_top.php';
           <?php if ($a['status'] !== 'rejected'): ?><button class="btn btn-danger btn-sm" name="to" value="rejected" data-confirm="This applicant will be rejected." data-confirm-title="Reject applicant?" data-confirm-ok="Reject" data-confirm-tone="danger">Reject</button><?php endif; ?>
         </div>
       </form>
+    <?php endif; ?>
+
+    <?php if ($reportsOn): ?>
+      <?php if (isset($reportedSeekers[(int)$a['seeker_id']])): ?>
+        <p class="small ap-reported"><?= icon('flag', 14) ?> You reported this applicant. The admin team is reviewing it.</p>
+      <?php else: ?>
+        <details class="ap-report">
+          <summary><?= icon('flag', 14) ?> Report applicant</summary>
+          <form method="post" class="form" action="<?= e(url($back)) ?>"><?= csrf_field() ?><input type="hidden" name="action" value="report"><input type="hidden" name="id" value="<?= (int)$a['id'] ?>">
+            <label for="rr<?= (int)$a['id'] ?>">Reason</label>
+            <select id="rr<?= (int)$a['id'] ?>" name="reason" required>
+              <option value="">Choose a reason</option>
+              <?php foreach (APPLICANT_REPORT_REASONS as $rk => $rl): ?><option value="<?= e($rk) ?>"><?= e($rl) ?></option><?php endforeach; ?>
+            </select>
+            <label for="rd<?= (int)$a['id'] ?>">What happened? (optional, but needed for Other)</label>
+            <textarea id="rd<?= (int)$a['id'] ?>" name="details" rows="3" maxlength="500" placeholder="Example: They asked me to send money before the interview."></textarea>
+            <p class="small" style="margin:0 0 8px">Reports go to the admin team only. The applicant is not told who reported them.</p>
+            <button class="btn btn-gold btn-sm" type="submit">Send report</button>
+          </form>
+        </details>
+      <?php endif; ?>
     <?php endif; ?>
   </div>
 <?php endforeach; ?>
