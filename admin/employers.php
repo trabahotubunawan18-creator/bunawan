@@ -28,7 +28,7 @@ $whereSql = implode(' AND ', $where);
 
 // Get employers
 $sql = "
-    SELECT ep.user_id, ep.employer_name, ep.employer_type, ep.verification_status,
+    SELECT ep.user_id, ep.employer_name, ep.logo_path, ep.employer_type, ep.verification_status,
            ep.permit_expiry, ep.verified_at, ep.verification_expires, ep.peso_endorsed,
            ep.approved_post_count, ep.created_at,
            u.email, u.status AS user_status,
@@ -130,10 +130,13 @@ require __DIR__ . '/../includes/admin_top.php';
             ?>
             <tr>
               <td>
-                <div>
-                  <strong><?= e($e['employer_name']) ?></strong>
-                  <div class="small"><?= e($e['email']) ?></div>
-                  <?php if ($e['peso_endorsed']): ?><span class="badge badge-gold">PESO endorsed</span><?php endif; ?>
+                <div style="display:flex;gap:12px;align-items:center">
+                  <span class="av av-sq" aria-hidden="true"><?= avatar_inner($e['logo_path'] ?? null, $e['employer_name']) ?></span>
+                  <div>
+                    <strong><?= e($e['employer_name']) ?></strong>
+                    <div class="small"><?= e($e['email']) ?></div>
+                    <?php if ($e['peso_endorsed']): ?><span class="badge badge-gold">PESO endorsed</span><?php endif; ?>
+                  </div>
                 </div>
               </td>
               <td><?= ucfirst(str_replace('_', ' ', $e['employer_type'])) ?></td>
