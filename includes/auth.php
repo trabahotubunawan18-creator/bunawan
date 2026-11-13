@@ -58,3 +58,17 @@ function rate_hit(string $action): void {
     db()->prepare('INSERT INTO rate_limits (action, ip_address) VALUES (?, ?)')->execute([$action, client_ip()]);
     db()->exec('DELETE FROM rate_limits WHERE created_at < (NOW() - make_interval(days => 1))');
 }
+
+// ---------- Profile photo column ----------
+// Job seekers can upload a profile photo (users.photo_path). If database/migrations/user_photo.sql was not run by hand,
+// the column is added here the first time a logged-in person opens a page, so the site keeps working either way.
+function ensure_photo_column(): void {
+    if (!empty($_SESSION['photo_col_ok'])) return;
+    try {
+        $pdo = db();
+        $has = $pdo->query("SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'users' AND column_name = 'photo_path'")->fetchColumn();
+        if (!$has) $pdo->exec('ALTER TABLE public.users ADD COLUMN photo_path varchar(255)');
+        $_SESSION['photo_col_ok'] = 1;
+    } catch (Throwable $e) { error_log('photo_path column check failed: ' . $e->getMessage()); }
+}
+if (!empty($_SESSION['uid'])) ensure_photo_column();
