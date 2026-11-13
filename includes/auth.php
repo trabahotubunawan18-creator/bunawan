@@ -48,7 +48,18 @@ function require_role(string $role): void {
 }
 
 // ---------- Rate limiting (uses the rate_limits table) ----------
-function client_ip(): string { return substr($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0', 0, 45); }
+function client_ip(): string {
+    // Behind Render's proxy, REMOTE_ADDR can be the proxy itself, so prefer the visitor IP headers.
+    foreach (['HTTP_CF_CONNECTING_IP', 'HTTP_TRUE_CLIENT_IP'] as $h) {
+        $v = trim($_SERVER[$h] ?? '');
+        if ($v !== '' && filter_var($v, FILTER_VALIDATE_IP)) return substr($v, 0, 45);
+    }
+    if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        $first = trim(explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'])[0]);
+        if (filter_var($first, FILTER_VALIDATE_IP)) return substr($first, 0, 45);
+    }
+    return substr($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0', 0, 45);
+}
 function rate_count(string $action, int $minutes): int {
     $s = db()->prepare('SELECT COUNT(*) FROM rate_limits WHERE action = ? AND ip_address = ? AND created_at > (NOW() - make_interval(mins => CAST(? AS integer)))');
     $s->execute([$action, client_ip(), $minutes]);
