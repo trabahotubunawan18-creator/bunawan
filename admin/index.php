@@ -14,7 +14,7 @@ $employers    = $n("SELECT COUNT(*) FROM users WHERE role = 'employer'");
 $premium      = $n("SELECT COUNT(DISTINCT employer_id) FROM premium_subscriptions WHERE status = 'active' AND ends_on >= CURRENT_DATE");
 $autoToday    = $n("SELECT COUNT(*) FROM job_posts WHERE status = 'approved' AND DATE(approved_at) = CURRENT_DATE AND (red_flags IS NULL OR red_flags = '')");
 
-$queue = $pdo->query("SELECT ep.user_id, ep.employer_name, ep.employer_type, ep.created_at, b.name AS barangay
+$queue = $pdo->query("SELECT ep.user_id, ep.employer_name, ep.logo_path, ep.employer_type, ep.created_at, b.name AS barangay
     FROM employer_profiles ep JOIN barangays b ON b.id = ep.barangay_id WHERE ep.verification_status = 'pending'
     ORDER BY ep.created_at ASC LIMIT 5")->fetchAll();
 $expiring = $pdo->query("SELECT user_id, employer_name, permit_expiry FROM employer_profiles
@@ -97,7 +97,7 @@ require __DIR__ . '/../includes/admin_top.php';
         <div class="dsh-ph"><h2>Needs review</h2><a class="more" href="<?= url('admin/verification.php') ?>">Open queue &rarr;</a></div>
         <?php if ($queue): foreach ($queue as $q): $wd = (int)floor((time() - strtotime($q['created_at'])) / 86400); ?>
           <div class="dsh-row">
-            <span class="dsh-av"><?= e(initials($q['employer_name'])) ?></span>
+            <span class="dsh-av"><?= avatar_inner($q['logo_path'] ?? null, $q['employer_name']) ?></span>
             <div class="who"><b><?= e($q['employer_name']) ?></b><span><?= e($typeLabels[$q['employer_type']] ?? 'Employer') ?> &middot; <?= e($q['barangay']) ?> &middot; since <?= e(date('M j', strtotime($q['created_at']))) ?></span></div>
             <span class="dsh-wait<?= $wd >= 3 ? ' late' : '' ?>"><?= $wd < 1 ? 'Today' : $wd . ' day' . ($wd > 1 ? 's' : '') ?></span>
             <a class="btn btn-primary btn-sm" href="<?= url('admin/verify-review.php?id=' . (int)$q['user_id']) ?>">Review</a>
