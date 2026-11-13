@@ -23,3 +23,13 @@ function log_admin(string $action, ?string $targetType = null, ?int $targetId = 
         ->execute([$_SESSION['uid'], $action, $targetType, $targetId, $reason !== null ? mb_substr($reason, 0, 255) : null, client_ip()]);
 }
 function action_label(string $a): string { return ucfirst(str_replace('_', ' ', $a)); }
+
+// A formal warning: the person is notified with the admin's reason, and it is logged.
+// The activity log is also the warning history (action 'user_warned'), so no extra table is needed.
+// The reason is cut to 220 characters so the whole text fits in the 255-character notification.
+function warn_user(PDO $pdo, int $userId, string $reason, string $link): void {
+    $reason = mb_substr(trim($reason), 0, 220);
+    $pdo->prepare('INSERT INTO notifications (user_id, message, link) VALUES (?,?,?)')
+        ->execute([$userId, 'Warning from the admin team: ' . $reason, $link]);
+    log_admin('user_warned', 'user', $userId, $reason);
+}
