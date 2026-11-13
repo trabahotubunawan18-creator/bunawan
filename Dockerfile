@@ -1,10 +1,15 @@
 # Runs the PHP site on Render (Apache + PHP 8.2 + PostgreSQL driver)
 FROM php:8.2-apache
 
+# gd + exif: profile photos are shrunk to a small square and phone rotation is applied
 RUN apt-get update \
- && apt-get install -y --no-install-recommends libpq-dev \
- && docker-php-ext-install pdo_pgsql pgsql \
+ && apt-get install -y --no-install-recommends libpq-dev libjpeg-dev libpng-dev \
+ && docker-php-ext-configure gd --with-jpeg \
+ && docker-php-ext-install pdo_pgsql pgsql gd exif \
  && rm -rf /var/lib/apt/lists/*
+
+# Allow photo uploads up to 5 MB (PHP's default limit is only 2 MB)
+RUN printf 'upload_max_filesize=6M\npost_max_size=20M\n' > /usr/local/etc/php/conf.d/uploads.ini
 
 RUN a2enmod rewrite headers remoteip
 
@@ -21,5 +26,5 @@ COPY . /var/www/html/
 
 # Private uploads (resumes, IDs, payment proofs) go here
 ENV PRIVATE_DIR=/var/data/tbb_private
-RUN mkdir -p /var/data/tbb_private /var/www/html/uploads/logos /var/www/html/uploads/qr \
+RUN mkdir -p /var/data/tbb_private /var/www/html/uploads/logos /var/www/html/uploads/qr /var/www/html/uploads/avatars \
  && chown -R www-data:www-data /var/data /var/www/html/uploads
