@@ -31,6 +31,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         log_admin('user_suspended', 'user', $uid, $reason);
         $pdo->commit();
         flash('success', $u['full_name'] . ' was suspended.' . ($u['role'] === 'employer' ? ' Their jobs were closed.' : ''));
+    } elseif ($act === 'warn' && $u['role'] === 'seeker' && $u['status'] !== 'suspended') {
+        if (mb_strlen($reason) < 10) { flash('error', 'Write a reason of at least 10 characters.'); redirect($back); }
+        $pdo->beginTransaction();
+        warn_user($pdo, $uid, $reason, 'seeker/notifications.php');
+        $pdo->commit();
+        flash('success', $u['full_name'] . ' was warned. They were notified.');
     } elseif ($act === 'reactivate' && $u['status'] === 'suspended') {
         $pdo->beginTransaction();
         $pdo->prepare("UPDATE users SET status = 'active' WHERE id = ? AND role <> 'admin'")->execute([$uid]);
@@ -53,6 +59,11 @@ $total = (int)$c->fetchColumn();
 $r = $pdo->prepare('SELECT u.id, u.role, u.full_name, u.email, u.status, u.created_at, u.last_login FROM users u' . $where . ' ORDER BY u.created_at DESC LIMIT ' . $per . ' OFFSET ' . (($page - 1) * $per));
 $r->execute($p);
 $rows = $r->fetchAll();
+$warned = [];
+if ($rows) {
+    $wids = implode(',', array_map('intval', array_column($rows, 'id')));
+    foreach ($pdo->query("SELECT target_id, COUNT(*) AS c FROM admin_activity_logs WHERE action = 'user_warned' AND target_type = 'user' AND target_id IN ($wids) GROUP BY target_id") as $w) $warned[(int)$w['target_id']] = (int)$w['c'];
+}
 $tabCount = [];
 foreach ($cond as $k => $w) $tabCount[$k] = (int)$pdo->query("SELECT COUNT(*) FROM users u WHERE $w")->fetchColumn();
 $base = url('admin/users.php?' . http_build_query(array_filter(['tab' => $tab !== 'all' ? $tab : '', 'q' => $q])));
@@ -92,7 +103,7 @@ require __DIR__ . '/../includes/admin_top.php';
 <link rel="stylesheet" href="<?= e(url('assets/css/admin-users.css')) ?>">
 <div class="um-page">
 <div class="um-hero">
-  <div><h1>Users</h1><p>Search accounts, suspend misuse, and reactivate when it is resolved. Admin accounts cannot be created or changed here.</p></div>
+  <div><h1>Users</h1><p>Search accounts, warn or suspend misuse, and reactivate when it is resolved. Admin accounts cannot be created or changed here.</p></div>
   <div class="um-hero-chips">
     <span class="um-chip um-chip-gold"><?= icon('users', 16) ?><?= number_format($tabCount['all']) ?> <?= $tabCount['all'] === 1 ? 'account' : 'accounts' ?></span>
     <?php if ($tabCount['suspended'] > 0): ?><span class="um-chip um-chip-glass"><?= number_format($tabCount['suspended']) ?> suspended</span><?php endif; ?>
@@ -114,7 +125,7 @@ require __DIR__ . '/../includes/admin_top.php';
     <?php foreach ($rows as $x): [$jr] = $rel($x['created_at']); [$lr, $lNow] = $rel($x['last_login']); ?>
       <tr>
         <td><div class="um-user"><span class="um-av um-av-<?= e($x['role']) ?><?= $x['status'] === 'suspended' ? ' is-suspended' : '' ?>" aria-hidden="true"><?= e(initials($x['full_name'])) ?></span>
-          <div class="um-who"><b><?= e($x['full_name']) ?></b><div class="small"><?= e($x['email']) ?></div></div></div></td>
+          <div class="um-who"><b><?= e($x['full_name']) ?></b><div class="small"><?= e($x['email']) ?></div><?php if (!empty($warned[(int)$x['id']])): ?><span class="st st-pending" title="Warnings sent by the admin team">Warned x<?= (int)$warned[(int)$x['id']] ?></span><?php endif; ?></div></div></td>
         <td><span class="um-role um-role-<?= e($x['role']) ?>"><?= icon($roleIcon[$x['role']] ?? 'user', 14) ?><?= e($roleLabel[$x['role']] ?? $x['role']) ?></span></td>
         <td><span class="um-status um-st-<?= $umSt[$x['status']] ?? 'off' ?>"><?= e($stLbl[$x['status']] ?? $x['status']) ?></span></td>
         <td><span class="um-date"><?= e(date('M j, Y', strtotime($x['created_at']))) ?></span><span class="um-rel"><?= e($jr) ?></span></td>
@@ -129,6 +140,15 @@ require __DIR__ . '/../includes/admin_top.php';
               <form method="post" action="<?= e(url($back)) ?>" class="inline-form"><?= csrf_field() ?><input type="hidden" name="user_id" value="<?= (int)$x['id'] ?>">
                 <button class="btn btn-primary btn-sm" name="action" value="reactivate" data-confirm="This account will be reactivated." data-confirm-title="Reactivate account?" data-confirm-ok="Reactivate" data-confirm-tone="info">Reactivate</button></form>
             <?php else: ?>
+              <?php if ($x['role'] === 'seeker'): ?>
+              <details class="pop"><summary class="btn btn-gold btn-sm">Warn</summary>
+                <form method="post" action="<?= e(url($back)) ?>" class="form pop-body"><?= csrf_field() ?><input type="hidden" name="user_id" value="<?= (int)$x['id'] ?>">
+                  <p class="um-pop-title">Warn <?= e($x['full_name']) ?>?</p>
+                  <p class="um-pop-hint">They stay active and get a notification with your reason. The warning is saved in the activity log.</p>
+                  <textarea name="reason" rows="2" maxlength="220" placeholder="Reason (required, at least 10 characters, they will see it)" required></textarea>
+                  <div class="um-pop-btns"><button class="btn btn-outline btn-sm" type="button" data-um-close>Cancel</button>
+                    <button class="btn btn-gold btn-sm" name="action" value="warn" data-confirm="They will be notified of this warning." data-confirm-title="Send warning?" data-confirm-ok="Send warning" data-confirm-tone="info">Send warning</button></div></form></details>
+              <?php endif; ?>
               <details class="pop"><summary class="btn btn-danger btn-sm">Suspend</summary>
                 <form method="post" action="<?= e(url($back)) ?>" class="form pop-body"><?= csrf_field() ?><input type="hidden" name="user_id" value="<?= (int)$x['id'] ?>">
                   <p class="um-pop-title">Suspend <?= e($x['full_name']) ?>?</p>
