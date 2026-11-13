@@ -93,7 +93,7 @@ $w2 = $where; $p2 = $p;
 if ($tab) { $w2 .= ' AND a.status = :s'; $p2['s'] = $tab; }
 $total = $count[$tab ?: 'all'];
 $r = $pdo->prepare('SELECT a.id, a.seeker_id, a.applicant_name, a.applicant_phone, a.message, a.resume_path, a.status, a.employer_message, a.applied_at,
-        j.id AS job_id, j.title, u.email, sp.education, sp.skills, sp.work_experience, sp.availability, b.name AS barangay'
+        j.id AS job_id, j.title, u.email, u.photo_path, sp.education, sp.skills, sp.work_experience, sp.availability, b.name AS barangay'
     . $from . ' JOIN users u ON u.id = a.seeker_id LEFT JOIN seeker_profiles sp ON sp.user_id = a.seeker_id LEFT JOIN barangays b ON b.id = sp.barangay_id'
     . $w2 . " ORDER BY a.status = 'pending' DESC, a.applied_at DESC" . ($sortBy === 'match' ? ' LIMIT 300' : " LIMIT $per OFFSET " . (($page - 1) * $per)));
 $r->execute($p2);
@@ -169,7 +169,7 @@ require __DIR__ . '/../includes/emp_top.php';
   <div class="card panel-card applicant<?= $a['status'] === 'pending' ? ' applicant-new' : '' ?>">
     <div class="row-item card-head">
       <div style="display:flex;gap:14px;align-items:center">
-        <span class="av"><?= e(initials($a['applicant_name'])) ?></span>
+        <span class="av"><?= avatar_inner($a['photo_path'] ?? null, $a['applicant_name']) ?></span>
         <div><b style="font-size:17px"><?= e($a['applicant_name']) ?></b>
           <div class="small">For <a href="<?= url('employer/applicants.php?job=' . (int)$a['job_id']) ?>"><?= e($a['title']) ?></a> &middot; applied <?= e(date('M j, Y g:i A', strtotime($a['applied_at']))) ?></div></div>
       </div>
