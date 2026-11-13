@@ -28,8 +28,8 @@ if ($rejectedJobs > 0) $needs[] = [$rejectedJobs . ' job post' . ($rejectedJobs 
 if ($status === 'verified_business' && $p['permit_expiry'] && days_left($p['permit_expiry']) <= 30)
     $needs[] = ['Your business permit ' . (days_left($p['permit_expiry']) < 0 ? 'has expired' : 'expires on ' . date('M j, Y', strtotime($p['permit_expiry']))) . '. Contact us to renew your verification.', 'contact.php', 'Contact us'];
 
-$ra = $pdo->prepare('SELECT a.applicant_name, a.applied_at, a.status, j.title FROM job_applications a JOIN job_posts j ON j.id = a.job_id
-    WHERE j.employer_id = ? ORDER BY a.applied_at DESC LIMIT 5');
+$ra = $pdo->prepare('SELECT a.applicant_name, a.applied_at, a.status, j.title, u.photo_path FROM job_applications a JOIN job_posts j ON j.id = a.job_id
+    LEFT JOIN users u ON u.id = a.seeker_id WHERE j.employer_id = ? ORDER BY a.applied_at DESC LIMIT 5');
 $ra->execute([$uid]);
 $recent = $ra->fetchAll();
 
@@ -100,7 +100,7 @@ require __DIR__ . '/../includes/emp_top.php';
     <div class="panel-head"><h2>Recent applicants</h2><a class="more" href="<?= url('employer/applicants.php') ?>">See all</a></div>
     <?php if ($recent): foreach ($recent as $a): [$lbl, $cls] = app_status($a['status']); ?>
       <div class="row-item">
-        <div><b><?= e($a['applicant_name']) ?></b><div class="small"><?= e($a['title']) ?> &middot; <?= e(date('M j', strtotime($a['applied_at']))) ?></div></div>
+        <div style="display:flex;gap:12px;align-items:center;min-width:0"><span class="av"><?= avatar_inner($a['photo_path'] ?? null, $a['applicant_name']) ?></span><div><b><?= e($a['applicant_name']) ?></b><div class="small"><?= e($a['title']) ?> &middot; <?= e(date('M j', strtotime($a['applied_at']))) ?></div></div></div>
         <span class="st <?= e($cls) ?>"><?= e($lbl) ?></span>
       </div>
     <?php endforeach; else: ?>
