@@ -21,3 +21,8 @@ Supabase -> **Connect** -> **Session pooler** (port 5432). Do NOT use the "Trans
 * Uploaded files (resumes, ID photos, payment proofs, logos) are saved on the server's disk, not in Supabase.
   Use a host with a persistent disk and point `PRIVATE_DIR` at it, or they disappear on redeploy.
 * Never commit `includes/config.local.php` or `database/data.sql` (already in `.gitignore`).
+
+## 4. Profile photos (job seekers)
+* Run `database/migrations/user_photo.sql` in Supabase -> SQL Editor. It adds `users.photo_path`. (The site also adds this column by itself the first time someone logs in after the update, so this step is optional but cleaner.)
+* Photos are saved in the existing public bucket (`tbb-public`) under `avatars/`, next to company logos.
+* The Dockerfile now installs PHP's GD and EXIF extensions, so photos are shrunk to a small square. Rebuild and redeploy the image for that to take effect. Without GD the site still works, but photos are limited to 1 MB.
