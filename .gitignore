@@ -8,6 +8,7 @@ database/data.sql
 # Files people upload while using the site
 uploads/logos/*
 !uploads/logos/.gitkeep
+uploads/avatars/*
 tbb_private/
 
 # Editor / system files
