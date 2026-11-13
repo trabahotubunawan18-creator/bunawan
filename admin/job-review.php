@@ -6,7 +6,7 @@ $pdo = db(); $adminId = (int)$_SESSION['uid'];
 $id = (int)($_GET['id'] ?? 0);
 $from = ($_GET['from'] ?? '') === 'flagged' ? 'flagged' : 'jobs';
 
-$s = $pdo->prepare('SELECT j.*, ep.employer_name, ep.verification_status, ep.approved_post_count, b.name AS barangay, c.name AS category
+$s = $pdo->prepare('SELECT j.*, ep.employer_name, ep.logo_path, ep.verification_status, ep.approved_post_count, b.name AS barangay, c.name AS category
     FROM job_posts j JOIN employer_profiles ep ON ep.user_id = j.employer_id JOIN barangays b ON b.id = j.barangay_id
     JOIN job_categories c ON c.id = j.category_id WHERE j.id = ?');
 $s->execute([$id]);
@@ -91,7 +91,7 @@ $rvBlock = function (string $title, $text) use ($rvLines) {
 
 <header class="ad-hero rv-hero">
   <div class="ad-hero-main"><h1 class="dash-title"><?= e($j['title']) ?></h1>
-    <p class="dash-sub"><a href="<?= url('admin/verify-review.php?id=' . (int)$j['employer_id']) ?>"><?= e($j['employer_name']) ?></a> &middot; <?= icon('pin', 13) ?> <?= e($j['barangay']) ?> &middot; <?= e($j['category']) ?></p></div>
+    <p class="dash-sub"><a href="<?= url('admin/verify-review.php?id=' . (int)$j['employer_id']) ?>"><span class="av av-sq" style="display:inline-flex;width:24px;height:24px;border-radius:7px;font-size:10px;vertical-align:middle;margin-right:6px;border:1px solid var(--line)" aria-hidden="true"><?= avatar_inner($j['logo_path'] ?? null, $j['employer_name']) ?></span><?= e($j['employer_name']) ?></a> &middot; <?= icon('pin', 13) ?> <?= e($j['barangay']) ?> &middot; <?= e($j['category']) ?></p></div>
   <div class="ad-chips"><span class="st rv-st <?= e($jc) ?>"><?= e($jl) ?></span></div>
 </header>
 <?php if ($errors): ?><div class="alert alert-error" role="alert"><ul><?php foreach ($errors as $er): ?><li><?= e($er) ?></li><?php endforeach; ?></ul></div><?php endif; ?>
