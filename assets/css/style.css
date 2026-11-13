@@ -4194,3 +4194,18 @@ body.xp-open{overflow:hidden}
 .bj-head-end{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .bj-clear-top{color:#fff;font-size:13px;font-weight:600;padding:6px 12px;border:1px solid rgba(255,255,255,.55);border-radius:99px;white-space:nowrap}
 .bj-clear-top:hover{background:rgba(255,255,255,.16);color:#fff}
+
+/* Complaint type switch (job complaints / applicant reports) */
+.cp-types{display:inline-flex;gap:4px;padding:4px;margin-bottom:14px;background:#fff;border:1px solid var(--line);border-radius:99px;box-shadow:var(--shadow-sm)}
+.cp-types a{display:inline-flex;align-items:center;gap:8px;padding:6px 8px 6px 16px;border-radius:99px;font-size:14px;font-weight:600;color:var(--ink-2)}
+.cp-types a:hover{text-decoration:none;background:var(--green-50);color:var(--forest)}
+.cp-types a.on{background:var(--forest);color:#fff}
+.cp-types a.on .cp-badge{background:var(--gold);color:var(--ink)}
+
+/* Employer: report an applicant */
+.ap-report{margin-top:12px;padding-top:10px;border-top:1px dashed var(--line-strong)}
+.ap-report summary{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--red-ink);cursor:pointer}
+.ap-report .form{max-width:460px}
+.ap-report .form label{margin:10px 0 5px;font-size:13px}
+.ap-report .form .btn{margin-top:4px}
+.ap-reported{display:flex;align-items:center;gap:6px;margin:12px 0 0;padding-top:10px;border-top:1px dashed var(--line-strong);color:var(--muted)}
