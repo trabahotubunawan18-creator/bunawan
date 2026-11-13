@@ -56,7 +56,7 @@ if ($q !== '') {
 }
 $c = $pdo->prepare('SELECT COUNT(*) FROM users u' . $where); $c->execute($p);
 $total = (int)$c->fetchColumn();
-$r = $pdo->prepare('SELECT u.id, u.role, u.full_name, u.email, u.status, u.created_at, u.last_login FROM users u' . $where . ' ORDER BY u.created_at DESC LIMIT ' . $per . ' OFFSET ' . (($page - 1) * $per));
+$r = $pdo->prepare('SELECT u.id, u.role, u.full_name, u.email, u.status, u.created_at, u.last_login, u.photo_path, ep.logo_path FROM users u LEFT JOIN employer_profiles ep ON ep.user_id = u.id' . $where . ' ORDER BY u.created_at DESC LIMIT ' . $per . ' OFFSET ' . (($page - 1) * $per));
 $r->execute($p);
 $rows = $r->fetchAll();
 $warned = [];
@@ -124,7 +124,7 @@ require __DIR__ . '/../includes/admin_top.php';
     <thead><tr><th>User</th><th>Role</th><th>Status</th><th>Joined</th><th>Last login</th><th>Action</th></tr></thead><tbody>
     <?php foreach ($rows as $x): [$jr] = $rel($x['created_at']); [$lr, $lNow] = $rel($x['last_login']); ?>
       <tr>
-        <td><div class="um-user"><span class="um-av um-av-<?= e($x['role']) ?><?= $x['status'] === 'suspended' ? ' is-suspended' : '' ?>" aria-hidden="true"><?= e(initials($x['full_name'])) ?></span>
+        <td><div class="um-user"><span class="um-av um-av-<?= e($x['role']) ?><?= $x['status'] === 'suspended' ? ' is-suspended' : '' ?>" aria-hidden="true"><?= avatar_inner($x['logo_path'] ?: $x['photo_path'], $x['full_name']) ?></span>
           <div class="um-who"><b><?= e($x['full_name']) ?></b><div class="small"><?= e($x['email']) ?></div><?php if (!empty($warned[(int)$x['id']])): ?><span class="st st-pending" title="Warnings sent by the admin team">Warned x<?= (int)$warned[(int)$x['id']] ?></span><?php endif; ?></div></div></td>
         <td><span class="um-role um-role-<?= e($x['role']) ?>"><?= icon($roleIcon[$x['role']] ?? 'user', 14) ?><?= e($roleLabel[$x['role']] ?? $x['role']) ?></span></td>
         <td><span class="um-status um-st-<?= $umSt[$x['status']] ?? 'off' ?>"><?= e($stLbl[$x['status']] ?? $x['status']) ?></span></td>
