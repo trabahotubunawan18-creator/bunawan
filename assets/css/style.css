@@ -4209,3 +4209,13 @@ body.xp-open{overflow:hidden}
 .ap-report .form label{margin:10px 0 5px;font-size:13px}
 .ap-report .form .btn{margin-top:4px}
 .ap-reported{display:flex;align-items:center;gap:6px;margin:12px 0 0;padding-top:10px;border-top:1px dashed var(--line-strong);color:var(--muted)}
+
+/* Admin Users page: aligned action buttons */
+.um-actions .btn,
+.um-actions summary.btn{min-width:92px;justify-content:center}
+
+/* Gold glow (instead of red) while the Warn popup is open */
+.um-actions .pop[open]>summary.btn-gold{box-shadow:0 0 0 3px rgba(242,183,5,.35)}
+
+/* Warn popup: keep the two buttons the same size */
+.um-pop-btns .btn{min-width:96px;justify-content:center}
