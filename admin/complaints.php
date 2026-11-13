@@ -103,15 +103,15 @@ $total = $type === 'applicants' ? $apCount[$tab] : $tabCount[$tab];
 $groups = []; $details = []; $priorWarn = [];
 if ($type === 'applicants') {
     if ($apReady && $total > 0) {
-        $r = $pdo->prepare('SELECT u.id, u.full_name, u.email, u.status, COUNT(r.id) AS cnt, COUNT(DISTINCT r.employer_id) AS emps, MAX(r.created_at) AS latest
+        $r = $pdo->prepare('SELECT u.id, u.full_name, u.photo_path, u.email, u.status, COUNT(r.id) AS cnt, COUNT(DISTINCT r.employer_id) AS emps, MAX(r.created_at) AS latest
             FROM applicant_reports r JOIN users u ON u.id = r.seeker_id
-            WHERE r.status = ? GROUP BY u.id, u.full_name, u.email, u.status ORDER BY cnt DESC, latest DESC LIMIT ' . $per . ' OFFSET ' . (($page - 1) * $per));
+            WHERE r.status = ? GROUP BY u.id, u.full_name, u.photo_path, u.email, u.status ORDER BY cnt DESC, latest DESC LIMIT ' . $per . ' OFFSET ' . (($page - 1) * $per));
         $r->execute([$tab]);
         $groups = $r->fetchAll();
     }
     if ($groups) {
         $ids = implode(',', array_map('intval', array_column($groups, 'id')));
-        $d = $pdo->prepare("SELECT r.seeker_id, r.reason, r.details, r.created_at, ep.employer_name, j.title
+        $d = $pdo->prepare("SELECT r.seeker_id, r.reason, r.details, r.created_at, ep.employer_name, ep.logo_path, j.title
             FROM applicant_reports r LEFT JOIN employer_profiles ep ON ep.user_id = r.employer_id LEFT JOIN job_posts j ON j.id = r.job_id
             WHERE r.status = ? AND r.seeker_id IN ($ids) ORDER BY r.created_at DESC");
         $d->execute([$tab]);
@@ -128,7 +128,7 @@ $groups = $r->fetchAll();
 $details = [];
 if ($groups) {
     $ids = implode(',', array_map('intval', array_column($groups, 'id')));
-    $d = $pdo->prepare("SELECT r.job_id, r.reason, r.details, r.created_at, u.full_name FROM job_reports r LEFT JOIN users u ON u.id = r.reporter_id
+    $d = $pdo->prepare("SELECT r.job_id, r.reason, r.details, r.created_at, u.full_name, u.photo_path FROM job_reports r LEFT JOIN users u ON u.id = r.reporter_id
         WHERE r.status = ? AND r.job_id IN ($ids) ORDER BY r.created_at DESC");
     $d->execute([$tab]);
     foreach ($d as $x) $details[$x['job_id']][] = $x;
@@ -188,7 +188,7 @@ require __DIR__ . '/../includes/admin_top.php';
 <?php if ($type === 'applicants'): foreach ($groups as $g): $list = $details[$g['id']] ?? []; $was = $priorWarn[(int)$g['id']] ?? 0; $isSusp = $g['status'] === 'suspended'; ?>
   <article class="cp-card<?= $g['cnt'] >= 3 ? ' cp-hot' : '' ?>">
     <header class="cp-head">
-      <span class="cp-tile" aria-hidden="true"><?= icon('user', 20) ?></span>
+      <span class="cp-tile" aria-hidden="true"<?= !empty($g['photo_path']) ? ' style="overflow:hidden;padding:0"' : '' ?>><?= !empty($g['photo_path']) ? avatar_inner($g['photo_path'], $g['full_name']) : icon('user', 20) ?></span>
       <div class="cp-title"><h2><?= e($g['full_name']) ?></h2>
         <p class="cp-meta"><span><?= icon('mail', 14) ?><?= e($g['email']) ?></span><span><b><?= (int)$g['cnt'] ?></b> report<?= $g['cnt'] > 1 ? 's' : '' ?> from <b><?= (int)$g['emps'] ?></b> employer<?= $g['emps'] > 1 ? 's' : '' ?></span><span><?= icon('clock', 14) ?>Latest <?= e(date('M j, g:i A', strtotime($g['latest']))) ?></span></p></div>
       <div class="cp-head-r">
@@ -203,7 +203,7 @@ require __DIR__ . '/../includes/admin_top.php';
         <li class="cp-item">
           <span class="cp-reason cp-r-<?= e(['fake_identity' => 'scam', 'asks_money' => 'pay', 'harassment' => 'disc', 'spam' => 'info'][$x['reason']] ?? 'other') ?>"><?= e(APPLICANT_REPORT_REASONS[$x['reason']] ?? $x['reason']) ?></span>
           <?php if (trim((string)($x['details'] ?? '')) !== ''): ?><p class="cp-text"><?= e($x['details']) ?></p><?php else: ?><p class="cp-text none">No details provided.</p><?php endif; ?>
-          <div class="cp-by"><span class="cp-av" aria-hidden="true"><?= e(initials($who)) ?></span>
+          <div class="cp-by"><span class="cp-av" aria-hidden="true"><?= avatar_inner($x['logo_path'] ?? null, $who) ?></span>
             <div><b><?= e($who) ?></b><small><?= $x['title'] ? 'For ' . e($x['title']) . ' &middot; ' : '' ?><?= e(date('M j, g:i A', strtotime($x['created_at']))) ?></small></div></div>
         </li>
       <?php endforeach; ?>
@@ -239,7 +239,7 @@ require __DIR__ . '/../includes/admin_top.php';
         <li class="cp-item">
           <span class="cp-reason cp-r-<?= $reasonCls[$x['reason']] ?? 'other' ?>"><?= e($reasonLabel[$x['reason']] ?? $x['reason']) ?></span>
           <?php if (trim((string)($x['details'] ?? '')) !== ''): ?><p class="cp-text"><?= e($x['details']) ?></p><?php else: ?><p class="cp-text none">No details provided.</p><?php endif; ?>
-          <div class="cp-by"><span class="cp-av<?= $x['full_name'] === null ? ' guest' : '' ?>" aria-hidden="true"><?= $x['full_name'] === null ? '?' : e(initials($who)) ?></span>
+          <div class="cp-by"><span class="cp-av<?= $x['full_name'] === null ? ' guest' : '' ?>" aria-hidden="true"><?= $x['full_name'] === null ? '?' : avatar_inner($x['photo_path'] ?? null, $who) ?></span>
             <div><b><?= e($who) ?></b><small><?= e(date('M j, g:i A', strtotime($x['created_at']))) ?></small></div></div>
         </li>
       <?php endforeach; ?>
