@@ -115,6 +115,12 @@ function initials(string $name): string {
     foreach (array_slice($words, 0, 2) as $w) $out .= mb_strtoupper(mb_substr($w, 0, 1));
     return $out ?: '?';
 }
+// What goes INSIDE an avatar circle: the uploaded picture (company logo or profile photo) or, when there is none, the initials.
+// $rel is the path saved in the database (logo_path / photo_path). Every page uses this so a new picture shows up everywhere.
+function avatar_inner(?string $rel, string $name): string {
+    if ($rel !== null && $rel !== '') return '<img src="' . e(public_file_url($rel)) . '" alt="" loading="lazy">';
+    return e(initials($name));
+}
 function render_job_card(array $j, bool $featured = false, ?array $save = null): void { ?>
   <article class="card job<?= $featured ? ' job-featured' : '' ?>">
     <div class="job-head">
