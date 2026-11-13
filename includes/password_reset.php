@@ -7,8 +7,15 @@ function reset_table(): void {
     // The password_resets table is created by database/schema.sql (Supabase / PostgreSQL).
 }
 
-// True when the visitor is on the same computer as the server (XAMPP on your own PC).
+// True ONLY when the visitor is on the same computer as the server (XAMPP on your own PC).
+// This decides whether the reset link may be shown on screen, so it must never be true on a live host.
 function is_local_request(): bool {
+    // Render (and most hosts) always sit behind a proxy: never treat those requests as local.
+    if (getenv('RENDER') !== false) return false;
+    foreach (['HTTP_X_FORWARDED_FOR', 'HTTP_X_FORWARDED_HOST', 'HTTP_X_FORWARDED_PROTO', 'HTTP_FORWARDED',
+              'HTTP_X_REAL_IP', 'HTTP_CF_CONNECTING_IP', 'HTTP_TRUE_CLIENT_IP'] as $h) {
+        if (!empty($_SERVER[$h])) return false;
+    }
     return in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1'], true);
 }
 
