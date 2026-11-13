@@ -5,7 +5,7 @@ require __DIR__ . '/../includes/redflags.php';
 require_role('employer');
 $pdo = db(); $uid = (int)$_SESSION['uid'];
 
-$s = $pdo->prepare('SELECT ep.employer_name, ep.verification_status, ep.barangay_id, ep.approved_post_count FROM employer_profiles ep WHERE ep.user_id = ?');
+$s = $pdo->prepare('SELECT ep.employer_name, ep.logo_path, ep.verification_status, ep.barangay_id, ep.approved_post_count FROM employer_profiles ep WHERE ep.user_id = ?');
 $s->execute([$uid]);
 $emp = $s->fetch();
 [$vLabel, $vClass, $canPost] = verif_info($emp['verification_status'] ?? 'pending');
@@ -261,7 +261,7 @@ $pjDayPct = DAILY_POST_LIMIT > 0 ? min(100, (int)round($limits['today'] / DAILY_
 <aside class="pj-side">
   <p class="side-note">Live preview <span>updates as you type</span></p>
   <article class="card job">
-    <div class="job-head"><div class="avatar" aria-hidden="true"><?= e(initials($emp['employer_name'])) ?></div>
+    <div class="job-head"><div class="avatar" aria-hidden="true"><?= avatar_inner($emp['logo_path'] ?? null, $emp['employer_name']) ?></div>
       <div class="job-id"><h3 id="pv-title">Your job title</h3><p class="employer"><?= e($emp['employer_name']) ?></p></div></div>
     <div class="badges"><span class="badge badge-ver"><?= icon('shield', 14) ?> <?= e($vLabel) ?></span></div>
     <ul class="facts"><li><?= icon('pin') ?> <span id="pv-brgy">Barangay</span></li><li><?= icon('briefcase') ?> <span id="pv-type">Job type</span></li><li><?= icon('tag') ?> <span id="pv-cat">Category</span></li></ul>
