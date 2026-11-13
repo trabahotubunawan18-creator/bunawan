@@ -50,7 +50,7 @@ $tabs = ['requested' => 'Requests', 'active' => 'Active', 'expired' => 'Expired'
 $tab = array_key_exists($_GET['tab'] ?? '', $tabs) ? $_GET['tab'] : 'requested';
 $tabCount = [];
 foreach ($tabs as $k => $_) { $c = $pdo->prepare('SELECT COUNT(*) FROM premium_subscriptions WHERE status = ?'); $c->execute([$k]); $tabCount[$k] = (int)$c->fetchColumn(); }
-$r = $pdo->prepare('SELECT ps.*, ep.employer_name, ep.verification_status FROM premium_subscriptions ps JOIN employer_profiles ep ON ep.user_id = ps.employer_id
+$r = $pdo->prepare('SELECT ps.*, ep.employer_name, ep.logo_path, ep.verification_status FROM premium_subscriptions ps JOIN employer_profiles ep ON ep.user_id = ps.employer_id
     WHERE ps.status = ? ORDER BY ps.created_at DESC LIMIT 50');
 $r->execute([$tab]);
 $rows = $r->fetchAll();
@@ -124,7 +124,7 @@ require __DIR__ . '/../includes/admin_top.php';
     <article class="pm-card pm-card--<?= e($x['status']) ?>">
       <div class="pm-main">
       <div class="pm-head">
-        <span class="pm-av" aria-hidden="true"><?= e(initials($x['employer_name'])) ?></span>
+        <span class="pm-av" aria-hidden="true"><?= avatar_inner($x['logo_path'] ?? null, $x['employer_name']) ?></span>
         <div class="pm-id"><h3 title="<?= e($x['employer_name']) ?>"><?= e($x['employer_name']) ?></h3>
           <span class="pm-ver <?= $isVerified ? 'ok' : 'no' ?>"><?= icon($isVerified ? 'shield' : 'clock', 14) ?> <?= e($v[0]) ?></span></div>
         <?php if ($x['status'] === 'active'): ?><span class="pm-feat"><?= icon('star', 13) ?> Featured</span><?php else: ?><span class="st <?= $sc ?>"><?= e($sl) ?></span><?php endif; ?>
