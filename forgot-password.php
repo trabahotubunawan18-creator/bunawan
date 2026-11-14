@@ -28,13 +28,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($u && $u['status'] !== 'suspended') {
             db()->prepare('UPDATE password_resets SET used_at = NOW() WHERE user_id = ? AND used_at IS NULL')->execute([$u['id']]);
             $token = bin2hex(random_bytes(32));
-            db()->prepare('INSERT INTO password_resets (user_id, token_hash, expires_at) VALUES (?, ?, NOW() + make_interval(mins => 60))')
-                ->execute([$u['id'], hash('sha256', $token)]);
+            db()->prepare('INSERT INTO password_resets (user_id, token_hash, expires_at) VALUES (?, ?, NOW() + make_interval(mins => CAST(? AS integer)))')
+                ->execute([$u['id'], hash('sha256', $token), reset_minutes()]);
             $link = absolute_url('reset-password.php?token=' . $token);
-            $body = "Hello {$u['full_name']},\n\nWe received a request to reset your Trabaho Tu Bunawan password.\n"
-                  . "Open this link within 60 minutes to choose a new password:\n\n{$link}\n\n"
-                  . "If you did not ask for this, you can ignore this email. Your password will stay the same.\n";
-            $mailed = send_site_mail($email, 'Reset your Trabaho Tu Bunawan password', $body);
+            // A neat HTML email (with a plain-text copy for mail apps that cannot show HTML).
+            $mail   = build_reset_email((string)$u['full_name'], $email, $link);
+            $mailed = send_site_mail($email, $mail['subject'], $mail['text'], $mail['html'], (string)$u['full_name']);
             // XAMPP cannot send email by default, so on your own computer we show the link here instead.
             if (!$mailed) $mailError = mail_last_error();
             if (!$mailed && is_local_request()) $devLink = $link;
@@ -55,14 +54,14 @@ require_once __DIR__ . '/includes/back_button.php';
     <span class="simple-ico"><?= icon('lock', 26) ?></span>
     <?php if ($sent): ?>
       <h1>Check your email</h1>
-      <p class="simple-lead">If an account exists for <b><?= e($email) ?></b>, we sent a link to reset the password. It works for 60 minutes.</p>
+      <p class="simple-lead">If an account exists for <b><?= e($email) ?></b>, we sent a link to reset the password. The link works for <?= (int)reset_minutes() ?> minutes and can be used once.</p>
       <?php if ($devLink): ?>
         <div class="alert alert-info" role="status">
           <b>Local testing only.</b> The email could not be sent<?= $mailError ? ' (' . e($mailError) . ')' : '' ?>, so here is the link:
           <p style="margin:8px 0 0;word-break:break-all"><a href="<?= e($devLink) ?>"><?= e($devLink) ?></a></p>
         </div>
       <?php endif; ?>
-      <p class="small">Nothing in your inbox? Check the spam folder, or <a href="<?= url('forgot-password.php') ?>">try again</a>.</p>
+      <p class="small">Nothing in your inbox? Look in the spam or junk folder (the email is from <b>Trabaho Tu Bunawan</b>), wait a minute or two, or <a href="<?= url('forgot-password.php') ?>">try again</a>.</p>
       <a class="btn btn-outline block" href="<?= url('login.php') ?>">Back to login</a>
     <?php else: ?>
       <h1>Forgot your password?</h1>
