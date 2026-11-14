@@ -218,6 +218,7 @@ function val(array $v, string $k): string { return e($v[$k] ?? ''); }
           <?php else: ?>
             <p class="step-sub">You will use this email and password to log in.</p>
           <?php endif; ?>
+          <p class="small">Not sure what to prepare? <a href="<?= url('guide.php#employers') ?>" target="_blank" rel="noopener">Read the employer guide</a> (opens in a new tab).</p>
           <div class="row2">
             <div><label for="e-name">Your full name</label>
               <input id="e-name" name="full_name" maxlength="100" autocomplete="name" value="<?= val($v, 'full_name') ?>" required></div>
