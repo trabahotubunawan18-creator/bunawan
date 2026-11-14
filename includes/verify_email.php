@@ -1,4 +1,3 @@
-
 <?php
 // Email verification: sends a "confirm your email" link after sign-up, so only real, working emails can be used.
 // Uses the same email sender and layout as the password reset (includes/password_reset.php).
