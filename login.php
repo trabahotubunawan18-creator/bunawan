@@ -1,6 +1,7 @@
 <?php
 require __DIR__ . '/includes/auth.php';
 require __DIR__ . '/includes/helpers.php';
+require __DIR__ . '/includes/verify_email.php';
 
 if (is_logged_in()) redirect(dashboard_url($_SESSION['role']));
 
@@ -70,22 +71,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($_POST['agree'])) $errors[] = 'Please accept the Terms and Privacy Policy to continue.';
 
             if (!$errors) {
-                $s = db()->prepare('SELECT id FROM users WHERE email = ?');
+                $s = db()->prepare('SELECT id, role, status FROM users WHERE email = ?');
                 $s->execute([$old['email']]);
-                if ($s->fetch()) {
+                $ex = $s->fetch();
+                if ($ex && !($ex['status'] === 'pending_email' && $ex['role'] === 'seeker')) {
                     $errors[] = 'That email is already registered. Try logging in instead.';
                 } else {
                     rate_hit('register');
                     $status = REQUIRE_EMAIL_VERIFY ? 'pending_email' : 'active';
-                    $token = REQUIRE_EMAIL_VERIFY ? bin2hex(random_bytes(32)) : null;
                     $pdo = db();
-                    $pdo->beginTransaction();
-                    $pdo->prepare("INSERT INTO users (role, full_name, email, phone, password_hash, status, email_token) VALUES ('seeker', ?, ?, ?, ?, ?, ?)")
-                        ->execute([$old['name'], $old['email'], $old['phone'], password_hash($pass, PASSWORD_DEFAULT), $status, $token]);
-                    $pdo->prepare('INSERT INTO seeker_profiles (user_id) VALUES (?)')->execute([$pdo->lastInsertId()]);
-                    $pdo->commit();
-                    // TODO (later step): send $token by email when REQUIRE_EMAIL_VERIFY is true
-                    flash('success', 'Account created. You can now log in.');
+                    if ($ex) {
+                        // The same email signed up before but never confirmed it: this new sign-up replaces it.
+                        $uid = (int)$ex['id'];
+                        $pdo->prepare('UPDATE users SET full_name = ?, phone = ?, password_hash = ?, status = ? WHERE id = ?')
+                            ->execute([$old['name'], $old['phone'], password_hash($pass, PASSWORD_DEFAULT), $status, $uid]);
+                    } else {
+                        $pdo->beginTransaction();
+                        $pdo->prepare("INSERT INTO users (role, full_name, email, phone, password_hash, status) VALUES ('seeker', ?, ?, ?, ?, ?)")
+                            ->execute([$old['name'], $old['email'], $old['phone'], password_hash($pass, PASSWORD_DEFAULT), $status]);
+                        $uid = (int)$pdo->lastInsertId();
+                        $pdo->prepare('INSERT INTO seeker_profiles (user_id) VALUES (?)')->execute([$uid]);
+                        $pdo->commit();
+                    }
+                    if (REQUIRE_EMAIL_VERIFY) {
+                        verification_flash(issue_verification($uid, $old['name'], $old['email'], 'seeker'), $old['email'], 'Account created.');
+                    } else {
+                        flash('success', 'Account created. You can now log in.');
+                    }
                     redirect('login.php');
                 }
             }
@@ -127,6 +139,7 @@ require __DIR__ . '/includes/header.php';
         <div class="pw"><input id="l-pass" name="password" type="password" autocomplete="current-password" required>
           <button type="button" class="pw-btn" data-toggle-pw="l-pass">Show</button></div>
         <p class="small"><a href="<?= url('forgot-password.php') ?>">Forgot your password?</a></p>
+        <?php if (REQUIRE_EMAIL_VERIFY): ?><p class="small">Did not get the verification email? <a href="<?= url('resend-verification.php') ?>">Resend it</a></p><?php endif; ?>
         <button class="btn btn-primary block" type="submit">Log in</button>
         <p class="small center">New here? <a href="#" data-tab-link="register">Create a job seeker account</a></p>
       </form>
