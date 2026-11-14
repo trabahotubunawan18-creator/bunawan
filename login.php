@@ -2,6 +2,7 @@
 require __DIR__ . '/includes/auth.php';
 require __DIR__ . '/includes/helpers.php';
 require __DIR__ . '/includes/verify_email.php';
+require __DIR__ . '/includes/google_auth.php';
 
 if (is_logged_in()) redirect(dashboard_url($_SESSION['role']));
 
@@ -135,6 +136,7 @@ require __DIR__ . '/includes/header.php';
 
       <form id="panel-login" class="panel<?= $tab === 'login' ? ' show' : '' ?>" method="post" novalidate>
         <?= csrf_field() ?><input type="hidden" name="action" value="login">
+        <?= google_button('login') ?>
         <label for="l-email">Email</label>
         <input id="l-email" name="email" type="email" autocomplete="email" value="<?= e($email) ?>" required>
         <label for="l-pass">Password</label>
@@ -152,6 +154,7 @@ require __DIR__ . '/includes/header.php';
           <div class="role on"><b>I'm looking for a job</b><small>Register below</small></div>
           <a class="role" href="<?= url('register.php?role=employer') ?>"><b>I'm hiring</b><small>Employer registration</small></a>
         </div>
+        <?= google_button('register') ?>
         <label for="r-name">Full name</label>
         <input id="r-name" name="name" autocomplete="name" maxlength="100" value="<?= e($old['name']) ?>" required>
         <label for="r-email">Email</label>
