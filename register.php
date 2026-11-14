@@ -217,7 +217,6 @@ function val(array $v, string $k): string { return e($v[$k] ?? ''); }
             <p class="step-sub">You are signing up with Google. You will log in with the <b>Continue with Google</b> button, so you do not need a password. <a href="<?= url('register.php?role=employer&google=off') ?>">Use email and password instead</a></p>
           <?php else: ?>
             <p class="step-sub">You will use this email and password to log in.</p>
-            <?= google_button('employer', 'Sign up with Google') ?>
           <?php endif; ?>
           <div class="row2">
             <div><label for="e-name">Your full name</label>
@@ -233,6 +232,7 @@ function val(array $v, string $k): string { return e($v[$k] ?? ''); }
             <div><label for="e-pass2">Confirm password</label>
               <input id="e-pass2" name="password2" type="password" autocomplete="new-password"<?= $g ? ' disabled' : ' required' ?>></div>
           </div>
+          <?php if (!$g) echo google_button('employer', 'Sign up with Google', true); ?>
         </div>
 
         <!-- Step 2 -->
