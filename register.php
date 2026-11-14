@@ -4,6 +4,7 @@ require __DIR__ . '/includes/auth.php';
 require __DIR__ . '/includes/helpers.php';
 require __DIR__ . '/includes/upload.php';
 require __DIR__ . '/includes/verify_email.php';
+require __DIR__ . '/includes/google_auth.php';
 
 if (($_GET['role'] ?? '') !== 'employer') redirect('login.php?tab=register');
 if (is_logged_in()) {
@@ -16,6 +17,11 @@ $pdo = db();
 $barangays = $pdo->query('SELECT id, name FROM barangays WHERE is_active = 1 ORDER BY name')->fetchAll();
 $errors = [];
 $add = function (int $step, string $msg) use (&$errors) { $errors[] = [$step, $msg]; };
+
+// Signed in with Google? Then step 1 is already done: name and email come from Google, and there is no password.
+if (($_GET['google'] ?? '') === 'off') { unset($_SESSION['google_signup']); redirect('register.php?role=employer'); }
+$g = $_SESSION['google_signup'] ?? null;
+if ($g && (time() - (int)($g['time'] ?? 0) > 7200)) { unset($_SESSION['google_signup']); $g = null; }
 
 $fields = ['full_name', 'email', 'type', 'employer_name', 'description', 'barangay', 'address', 'landmark',
     'contact_person', 'contact_position', 'contact_phone', 'facebook', 'permit_number', 'permit_expiry', 'dti',
@@ -32,6 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         foreach ($fields as $k) $v[$k] = trim((string)($_POST[$k] ?? ''));
         $v['email'] = strtolower($v['email']);
+        if ($g) $v['email'] = $g['email'];   // never trust the form for a Google email
         $pass  = $_POST['password'] ?? '';
         $pass2 = $_POST['password2'] ?? '';
         $normPhone = fn($p) => preg_replace('/[\s\-()]/', '', $p);
@@ -41,8 +48,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Step 1: account
         if (mb_strlen($v['full_name']) < 2 || mb_strlen($v['full_name']) > 100) $add(1, 'Enter your full name.');
         if (!filter_var($v['email'], FILTER_VALIDATE_EMAIL) || strlen($v['email']) > 190) $add(1, 'Enter a valid email address.');
-        if ($pw_err = password_problem($pass)) $add(1, $pw_err);
-        if ($pass !== $pass2) $add(1, 'The two passwords do not match.');
+        if (!$g) {
+            if ($pw_err = password_problem($pass)) $add(1, $pw_err);
+            if ($pass !== $pass2) $add(1, 'The two passwords do not match.');
+        }
 
         // Step 2: type and name
         $types = ['registered_business', 'organization', 'individual'];
@@ -126,10 +135,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             rate_hit('register');
             try {
                 $pdo->beginTransaction();
-                $status = REQUIRE_EMAIL_VERIFY ? 'pending_email' : 'active';
+                $status = ($g || !REQUIRE_EMAIL_VERIFY) ? 'active' : 'pending_email';   // Google already confirmed the email
                 $token  = null;   // the real (hashed) verification link is created by issue_verification() after saving
                 $pdo->prepare("INSERT INTO users (role, full_name, email, phone, password_hash, status, email_token) VALUES ('employer',?,?,?,?,?,?)")
-                    ->execute([$v['full_name'], $v['email'], $v['contact_phone'], password_hash($pass, PASSWORD_DEFAULT), $status, $token]);
+                    ->execute([$v['full_name'], $v['email'], $v['contact_phone'], password_hash($g ? bin2hex(random_bytes(32)) : $pass, PASSWORD_DEFAULT), $status, $token]);
                 $uid = (int)$pdo->lastInsertId();
                 $pdo->prepare("INSERT INTO employer_profiles
                     (user_id, employer_name, employer_type, description, barangay_id, full_address, landmark, contact_person, contact_position,
@@ -150,7 +159,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $add(1, 'Something went wrong while saving your application. Please try again.');
             }
             if (!$errors) {
-                if (REQUIRE_EMAIL_VERIFY) {
+                unset($_SESSION['google_signup']);
+                if (REQUIRE_EMAIL_VERIFY && !$g) {
                     verification_flash(issue_verification($uid, $v['full_name'], $v['email'], 'employer'), $v['email'], 'Application received.');
                     redirect('login.php');
                 }
@@ -165,6 +175,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+if ($g) {   // keep the Google details in step 1
+    $v['email'] = $g['email'];
+    if ($v['full_name'] === '') $v['full_name'] = $g['name'];
+}
 $startStep = $errors ? min(array_column($errors, 0)) : 1;
 $labels = ['Account', 'Employer type', 'Address', 'Documents', 'References', 'Agreements'];
 $pageTitle = 'Employer Registration';
@@ -193,26 +207,31 @@ function val(array $v, string $k): string { return e($v[$k] ?? ''); }
         <?php if (!empty($_FILES)): ?><p class="small" style="margin:8px 0 0">For security, please choose your files again.</p><?php endif; ?></div>
       <?php endif; ?>
 
-      <form id="wiz" class="form reg-form" method="post" enctype="multipart/form-data" data-start="<?= (int)$startStep ?>" novalidate>
+      <form id="wiz" class="form reg-form" method="post" enctype="multipart/form-data" data-start="<?= (int)$startStep ?>"<?= $g ? ' data-google="1"' : '' ?> novalidate>
         <?= csrf_field() ?>
 
         <!-- Step 1 -->
         <div class="wiz-step" data-step="1">
           <div class="step-head"><span class="st-ico"><?= icon('user', 20) ?></span><h2>Create your account</h2><span class="step-count">Step 1 of 6</span></div>
-          <p class="step-sub">You will use this email and password to log in.</p>
+          <?php if ($g): ?>
+            <p class="step-sub">You are signing up with Google. You will log in with the <b>Continue with Google</b> button, so you do not need a password. <a href="<?= url('register.php?role=employer&google=off') ?>">Use email and password instead</a></p>
+          <?php else: ?>
+            <p class="step-sub">You will use this email and password to log in.</p>
+            <?= google_button('employer', 'Sign up with Google') ?>
+          <?php endif; ?>
           <div class="row2">
             <div><label for="e-name">Your full name</label>
               <input id="e-name" name="full_name" maxlength="100" autocomplete="name" value="<?= val($v, 'full_name') ?>" required></div>
             <div><label for="e-email">Email</label>
-              <input id="e-email" name="email" type="email" maxlength="190" autocomplete="email" value="<?= val($v, 'email') ?>" required></div>
+              <input id="e-email" name="email" type="email" maxlength="190" autocomplete="email" value="<?= val($v, 'email') ?>"<?= $g ? ' readonly' : '' ?> required></div>
           </div>
-          <div class="row2">
+          <div class="row2"<?= $g ? ' style="display:none"' : '' ?>>
             <div><label for="e-pass">Password</label>
-              <div class="pw"><input id="e-pass" name="password" type="password" minlength="8" autocomplete="new-password" required>
+              <div class="pw"><input id="e-pass" name="password" type="password" minlength="8" autocomplete="new-password"<?= $g ? ' disabled' : ' required' ?>>
                 <button type="button" class="pw-btn" data-toggle-pw="e-pass">Show</button></div>
               <div class="meter"><span id="e-meter"></span></div><small class="small" id="e-meter-text">At least 8 characters with uppercase, lowercase, a number and a symbol.</small></div>
             <div><label for="e-pass2">Confirm password</label>
-              <input id="e-pass2" name="password2" type="password" autocomplete="new-password" required></div>
+              <input id="e-pass2" name="password2" type="password" autocomplete="new-password"<?= $g ? ' disabled' : ' required' ?>></div>
           </div>
         </div>
 
