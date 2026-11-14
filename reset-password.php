@@ -5,6 +5,10 @@ require __DIR__ . '/includes/password_reset.php';
 
 if (is_logged_in()) redirect(dashboard_url($_SESSION['role']));
 
+// Keep the secret token in the address bar from leaking to other sites or being cached.
+header('Referrer-Policy: no-referrer');
+header('Cache-Control: no-store');
+
 $token = (string)($_POST['token'] ?? $_GET['token'] ?? '');
 $reset = find_reset($token);
 $errors = [];
@@ -35,6 +39,17 @@ if ($reset && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 $errors[] = 'Something went wrong. Please try again.';
             }
             if (!$errors) {
+                // Tell the owner their password was changed (so they notice if it was not them). Never blocks the reset.
+                try {
+                    $us = db()->prepare('SELECT full_name, email FROM users WHERE id = ?');
+                    $us->execute([$reset['user_id']]);
+                    if ($usr = $us->fetch()) {
+                        $mail = build_password_changed_email((string)$usr['full_name'], (string)$usr['email']);
+                        send_site_mail((string)$usr['email'], $mail['subject'], $mail['text'], $mail['html'], (string)$usr['full_name']);
+                    }
+                } catch (Throwable $ex) {
+                    error_log('Password-changed email failed: ' . $ex->getMessage());
+                }
                 flash('success', 'Your password was changed. You can log in now.');
                 redirect('login.php');
             }
@@ -52,7 +67,7 @@ require_once __DIR__ . '/includes/back_button.php';
     <?php if (!$reset): ?>
       <span class="simple-ico simple-ico-warn"><?= icon('clock', 26) ?></span>
       <h1>This link no longer works</h1>
-      <p class="simple-lead">Reset links expire after 60 minutes and can only be used once. Request a new one and we will send it right away.</p>
+      <p class="simple-lead">Reset links expire after <?= (int)reset_minutes() ?> minutes and can only be used once. Request a new one and we will send it right away.</p>
       <a class="btn btn-primary block" href="<?= url('forgot-password.php') ?>">Get a new link</a>
       <a class="btn btn-outline block" href="<?= url('login.php') ?>">Back to login</a>
     <?php else: ?>
