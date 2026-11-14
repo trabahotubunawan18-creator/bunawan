@@ -55,6 +55,11 @@ cfg_define('SMTP_VERIFY_TLS', true);
 // Leave empty on XAMPP: the Gmail settings above are used. On Render, set it as the BREVO_API_KEY environment variable.
 cfg_define('BREVO_API_KEY', '');
 
+// "Continue with Google". Leave empty to hide the button. Get both values from Google Cloud (see the setup steps).
+// On Render, set them as the GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables.
+cfg_define('GOOGLE_CLIENT_ID', '');
+cfg_define('GOOGLE_CLIENT_SECRET', '');
+
 // On a live server, set your real address so links in emails are correct (config.local.php or the SITE_URL variable).
 if (!defined('SITE_URL') && getenv('SITE_URL')) define('SITE_URL', getenv('SITE_URL'));
 
