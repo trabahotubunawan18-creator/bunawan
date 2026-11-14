@@ -53,6 +53,7 @@ $cssVer = filemtime(__DIR__ . '/../assets/css/style.css');
       <?php endforeach; ?>
     </nav>
     <div class="side-foot">
+      <a class="side-link" href="<?= url('guide.php') ?>" target="_blank" rel="noopener"><?= icon('list', 17) ?> Need help? Guide</a>
       <form method="post" action="<?= url('logout.php') ?>"><?= csrf_field() ?>
         <button class="side-link" type="submit"><?= icon('logout', 17) ?> Log out</button></form>
     </div>
