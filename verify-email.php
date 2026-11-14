@@ -6,7 +6,7 @@ $token = (string)($_GET['token'] ?? '');
 $ok = false;
 if (preg_match('/^[a-f0-9]{64}$/', $token)) {
     $s = db()->prepare("SELECT id FROM users WHERE email_token = ? AND status = 'pending_email'");
-    $s->execute([$token]);
+    $s->execute([hash('sha256', $token)]);   // only the hash is stored
     if ($u = $s->fetch()) {
         db()->prepare("UPDATE users SET status = 'active', email_token = NULL WHERE id = ?")->execute([$u['id']]);
         $ok = true;
