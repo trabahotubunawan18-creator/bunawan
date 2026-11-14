@@ -9,6 +9,7 @@
       <h4>Explore</h4>
       <a href="<?= url('jobs.php') ?>">Find Jobs</a>
       <a href="<?= url('register.php?role=employer') ?>">For Employers</a>
+      <a href="<?= url('guide.php') ?>">How to use</a>
       <a href="<?= url('about.php') ?>">About</a>
       <a href="<?= url('contact.php') ?>">Contact</a>
     </div>
