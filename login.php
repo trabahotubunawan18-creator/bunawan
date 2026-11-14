@@ -136,7 +136,6 @@ require __DIR__ . '/includes/header.php';
 
       <form id="panel-login" class="panel<?= $tab === 'login' ? ' show' : '' ?>" method="post" novalidate>
         <?= csrf_field() ?><input type="hidden" name="action" value="login">
-        <?= google_button('login') ?>
         <label for="l-email">Email</label>
         <input id="l-email" name="email" type="email" autocomplete="email" value="<?= e($email) ?>" required>
         <label for="l-pass">Password</label>
@@ -145,6 +144,7 @@ require __DIR__ . '/includes/header.php';
         <p class="small"><a href="<?= url('forgot-password.php') ?>">Forgot your password?</a></p>
         <?php if ($showResend): ?><p class="small">Did not get the verification email? <a href="<?= url('resend-verification.php?email=' . urlencode($email)) ?>">Resend it</a></p><?php endif; ?>
         <button class="btn btn-primary block" type="submit">Log in</button>
+        <?= google_button('login', 'Continue with Google', true) ?>
         <p class="small center">New here? <a href="#" data-tab-link="register">Create a job seeker account</a></p>
       </form>
 
@@ -154,7 +154,6 @@ require __DIR__ . '/includes/header.php';
           <div class="role on"><b>I'm looking for a job</b><small>Register below</small></div>
           <a class="role" href="<?= url('register.php?role=employer') ?>"><b>I'm hiring</b><small>Employer registration</small></a>
         </div>
-        <?= google_button('register') ?>
         <label for="r-name">Full name</label>
         <input id="r-name" name="name" autocomplete="name" maxlength="100" value="<?= e($old['name']) ?>" required>
         <label for="r-email">Email</label>
@@ -169,6 +168,7 @@ require __DIR__ . '/includes/header.php';
         <input id="r-pass2" name="password2" type="password" autocomplete="new-password" required>
         <label class="check-row"><input type="checkbox" name="agree" value="1"> <span>I agree to the <a href="<?= url('terms.php') ?>">Terms</a> and <a href="<?= url('privacy.php') ?>">Privacy Policy</a>.</span></label>
         <button class="btn btn-primary block" type="submit">Create account</button>
+        <?= google_button('register', 'Continue with Google', true) ?>
         <p class="small center">Already registered? <a href="#" data-tab-link="login">Log in</a></p>
       </form>
     </div>
