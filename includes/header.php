@@ -36,7 +36,6 @@ $announcement = setting('announcement');
     <nav id="menu" class="menu">
       <?= nav_link('index.php', 'Home') ?>
       <?= nav_link('jobs.php', 'Find Jobs') ?>
-      <a href="<?= url('guide.php#employers') ?>">For Employers</a>
       <?= nav_link('guide.php', 'Guide') ?>
       <?= nav_link('about.php', 'About') ?>
       <?= nav_link('contact.php', 'Contact') ?>
