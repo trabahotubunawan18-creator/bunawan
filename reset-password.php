@@ -28,7 +28,7 @@ if ($reset && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo = db();
             try {
                 $pdo->beginTransaction();
-                $pdo->prepare('UPDATE users SET password_hash = ?, failed_logins = 0, locked_until = NULL WHERE id = ?')
+                $pdo->prepare('UPDATE users SET password_hash = ?, failed_logins = 0, locked_until = NULL, status = CASE WHEN status = \'pending_email\' THEN \'active\' ELSE status END, email_token = NULL WHERE id = ?')
                     ->execute([password_hash($pass, PASSWORD_DEFAULT), $reset['user_id']]);
                 // Use up this link and any other open links for the same account.
                 $pdo->prepare('UPDATE password_resets SET used_at = NOW() WHERE user_id = ? AND used_at IS NULL')->execute([$reset['user_id']]);
