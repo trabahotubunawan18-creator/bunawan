@@ -3,6 +3,7 @@
 require __DIR__ . '/includes/auth.php';
 require __DIR__ . '/includes/helpers.php';
 require __DIR__ . '/includes/upload.php';
+require __DIR__ . '/includes/verify_email.php';
 
 if (($_GET['role'] ?? '') !== 'employer') redirect('login.php?tab=register');
 if (is_logged_in()) {
@@ -94,9 +95,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Email must be new
         if (!$errors) {
-            $s = $pdo->prepare('SELECT id FROM users WHERE email = ?');
+            $s = $pdo->prepare('SELECT id, status FROM users WHERE email = ?');
             $s->execute([$v['email']]);
-            if ($s->fetch()) $add(1, 'That email is already registered. Try logging in instead.');
+            if ($row = $s->fetch()) {
+                $add(1, $row['status'] === 'pending_email'
+                    ? 'This email already has a registration waiting to be verified. Open the verification email we sent, or go to the login page and choose "Resend it".'
+                    : 'That email is already registered. Try logging in instead.');
+            }
         }
 
         // Uploads (only when everything else is valid, so we do not store files for a failed form)
@@ -122,7 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $pdo->beginTransaction();
                 $status = REQUIRE_EMAIL_VERIFY ? 'pending_email' : 'active';
-                $token  = REQUIRE_EMAIL_VERIFY ? bin2hex(random_bytes(32)) : null;
+                $token  = null;   // the real (hashed) verification link is created by issue_verification() after saving
                 $pdo->prepare("INSERT INTO users (role, full_name, email, phone, password_hash, status, email_token) VALUES ('employer',?,?,?,?,?,?)")
                     ->execute([$v['full_name'], $v['email'], $v['contact_phone'], password_hash($pass, PASSWORD_DEFAULT), $status, $token]);
                 $uid = (int)$pdo->lastInsertId();
@@ -146,7 +151,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if (!$errors) {
                 if (REQUIRE_EMAIL_VERIFY) {
-                    flash('info', 'Application received. Please verify your email, then log in.');
+                    verification_flash(issue_verification($uid, $v['full_name'], $v['email'], 'employer'), $v['email'], 'Application received.');
                     redirect('login.php');
                 }
                 session_regenerate_id(true);
