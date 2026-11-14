@@ -33,7 +33,7 @@ cfg_define('DB_SSLMODE', 'prefer');      // Supabase needs 'require'
 if (!defined('BASE_URL')) { $b = getenv('BASE_URL'); define('BASE_URL', $b === false ? '/bunawan' : rtrim($b, '/')); }
 
 cfg_define('SESSION_IDLE', 1800);        // log out after 30 minutes of no activity
-cfg_define('REQUIRE_EMAIL_VERIFY', false); // set true once email sending works
+cfg_define('REQUIRE_EMAIL_VERIFY', true);  // new accounts must confirm their email first. Set to false (or the REQUIRE_EMAIL_VERIFY variable to 0) to turn it off
 cfg_define('MAX_FAILED_LOGINS', 5);      // lock the account after this many wrong passwords
 cfg_define('LOCK_MINUTES', 15);
 
