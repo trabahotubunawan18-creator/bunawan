@@ -146,6 +146,7 @@ require __DIR__ . '/includes/header.php';
         <button class="btn btn-primary block" type="submit">Log in</button>
         <?= google_button('login', 'Continue with Google', true) ?>
         <p class="small center">New here? <a href="#" data-tab-link="register">Create a job seeker account</a></p>
+        <p class="small center">First time here? <a href="<?= url('guide.php') ?>">Read the guide</a></p>
       </form>
 
       <form id="panel-register" class="panel<?= $tab === 'register' ? ' show' : '' ?>" method="post" novalidate>
@@ -170,6 +171,7 @@ require __DIR__ . '/includes/header.php';
         <button class="btn btn-primary block" type="submit">Create account</button>
         <?= google_button('register', 'Continue with Google', true) ?>
         <p class="small center">Already registered? <a href="#" data-tab-link="login">Log in</a></p>
+        <p class="small center">First time here? <a href="<?= url('guide.php') ?>">Read the guide</a></p>
       </form>
     </div>
   </div>
