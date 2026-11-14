@@ -69,7 +69,7 @@
       if (f.disabled) continue;
       if (!f.checkValidity()) { f.reportValidity(); return false; }
     }
-    if (cur === 0) {
+    if (cur === 0 && !form.hasAttribute('data-google')) {
       const p = document.getElementById('e-pass'), p2 = document.getElementById('e-pass2');
       if (!/[A-Z]/.test(p.value) || !/[a-z]/.test(p.value) || !/\d/.test(p.value) || !/[^A-Za-z0-9]/.test(p.value)) { p.setCustomValidity('Use uppercase, lowercase, a number and a symbol.'); p.reportValidity(); p.setCustomValidity(''); return false; }
       if (p.value !== p2.value) { p2.setCustomValidity('The two passwords do not match.'); p2.reportValidity(); p2.setCustomValidity(''); return false; }
