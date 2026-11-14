@@ -115,7 +115,7 @@ attach_skill_info($pdo, $latest, $homeKeys ?: null);
 </section>
 
 <section class="wrap section">
-  <div class="sec-head"><div><h2>How it works</h2><p class="sub">Simple for job seekers, safe for employers.</p></div></div>
+  <div class="sec-head"><div><h2>How it works</h2><p class="sub">Simple for job seekers, safe for employers. <a href="<?= url('guide.php') ?>">Read the full guide</a></p></div></div>
   <div class="grid grid-3">
     <div class="card how">
       <img src="<?= url('assets/img/step-search.svg') ?>" alt="" width="72" height="72" onerror="this.style.display='none'">
