@@ -51,6 +51,10 @@ cfg_define('SMTP_FROM', '');             // leave empty to use SMTP_USER (Gmail 
 cfg_define('SMTP_FROM_NAME', 'Trabaho Tu Bunawan');
 cfg_define('SMTP_VERIFY_TLS', true);
 
+// Render's free plan blocks SMTP, so on Render send through Brevo's HTTPS API instead (see the setup steps).
+// Leave empty on XAMPP: the Gmail settings above are used. On Render, set it as the BREVO_API_KEY environment variable.
+cfg_define('BREVO_API_KEY', '');
+
 // On a live server, set your real address so links in emails are correct (config.local.php or the SITE_URL variable).
 if (!defined('SITE_URL') && getenv('SITE_URL')) define('SITE_URL', getenv('SITE_URL'));
 
