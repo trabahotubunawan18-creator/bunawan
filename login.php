@@ -6,6 +6,7 @@ require __DIR__ . '/includes/verify_email.php';
 if (is_logged_in()) redirect(dashboard_url($_SESSION['role']));
 
 $errors = [];
+$showResend = false;   // the "Resend it" link only appears when someone tries to log in before verifying
 $email = '';
 $tab = ($_GET['tab'] ?? 'login') === 'register' ? 'register' : 'login';
 $old = ['name' => '', 'email' => '', 'phone' => ''];
@@ -42,6 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif ($u['status'] === 'suspended') {
                 $errors[] = 'This account has been suspended. Please contact us if you think this is a mistake.';
             } elseif ($u['status'] === 'pending_email') {
+                $showResend = true;
                 $errors[] = 'Please verify your email first. Check your inbox for the verification link.';
             } else {
                 session_regenerate_id(true);
@@ -139,7 +141,7 @@ require __DIR__ . '/includes/header.php';
         <div class="pw"><input id="l-pass" name="password" type="password" autocomplete="current-password" required>
           <button type="button" class="pw-btn" data-toggle-pw="l-pass">Show</button></div>
         <p class="small"><a href="<?= url('forgot-password.php') ?>">Forgot your password?</a></p>
-        <?php if (REQUIRE_EMAIL_VERIFY): ?><p class="small">Did not get the verification email? <a href="<?= url('resend-verification.php') ?>">Resend it</a></p><?php endif; ?>
+        <?php if ($showResend): ?><p class="small">Did not get the verification email? <a href="<?= url('resend-verification.php?email=' . urlencode($email)) ?>">Resend it</a></p><?php endif; ?>
         <button class="btn btn-primary block" type="submit">Log in</button>
         <p class="small center">New here? <a href="#" data-tab-link="register">Create a job seeker account</a></p>
       </form>
