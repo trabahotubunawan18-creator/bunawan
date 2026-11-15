@@ -222,11 +222,11 @@ function complete_registration(string $token): string {
 // Sets the message the person sees after signing up.
 function verification_flash(array $r, string $email, string $prefix): void {
     if ($r['sent']) {
-        flash('success', $prefix . ' We sent a verification link to ' . $email . '. Your account is created once you open it, then you can log in. The link works for ' . PENDING_HOURS . ' hours. Check your spam folder if you do not see it.');
+        flash('success', $prefix . ' We sent a link to ' . $email . '. Open it to create your account.');
     } elseif (!empty($r['dev_link'])) {
         flash('info', $prefix . ' Local testing: the email could not be sent, so open this link: ' . $r['dev_link']);
     } else {
-        flash('info', $prefix . ' But we could not send the verification email right now. Use "Resend it" on the login page to get a new link.');
+        flash('info', $prefix . ' But the email could not be sent. Use "Resend it" on this page.');
     }
 }
 
