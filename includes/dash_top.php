@@ -21,7 +21,6 @@ $navItems = [
     ['seeker/resume.php', 'resume.php', 'Resume', 'file'],
     ['seeker/notifications.php', 'notifications.php', 'Notifications', 'bell'],
     ['seeker/settings.php', 'settings.php', 'Settings', 'cog'],
-    ['seeker/guide.php', 'guide.php', 'User Guide', 'list'],
 ];
 $cssVer = filemtime(__DIR__ . '/../assets/css/style.css');
 ?>
