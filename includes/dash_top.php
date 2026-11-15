@@ -18,7 +18,6 @@ $navItems = [
     ['seeker/saved.php', 'saved.php', 'Saved jobs', 'bookmark'],
     ['seeker/applications.php', 'applications.php', 'My applications', 'send'],
     ['seeker/profile.php', 'profile.php', 'My profile', 'user'],
-    ['seeker/resume.php', 'resume.php', 'Resume', 'file'],
     ['seeker/notifications.php', 'notifications.php', 'Notifications', 'bell'],
     ['seeker/settings.php', 'settings.php', 'Settings', 'cog'],
 ];
