@@ -2,7 +2,7 @@
  *
  *   TBBMap.viewer({map:'job-map', ll:[lat,lng], title:'Employer name'})
  *   TBBMap.picker({map:'pj-map', lat:'pj-lat', lng:'pj-lng', note:'pj-pin-note',
- *                  locate:'pj-locate', center:'pj-center', search:'pj-search', go:'pj-go'})
+ *                  locate:'pj-locate', center:'pj-center'})
  */
 (function () {
   'use strict';
@@ -175,34 +175,6 @@
       { enableHighAccuracy: true, timeout: 12000 });
     });
 
-    // Search a place, or paste coordinates copied from Google Maps ("8.1234, 125.9876")
-    function find() {
-      var q = ($(o.search).value || '').trim();
-      if (!q) return;
-      var c = q.match(/^(-?\d+(?:\.\d+)?)\s*[,;\s]\s*(-?\d+(?:\.\d+)?)$/);
-      if (c) {
-        var a = parseFloat(c[1]), b = parseFloat(c[2]);
-        if (Math.abs(a) > 90 && Math.abs(b) <= 90) { var t = a; a = b; b = t; }  // typed longitude first
-        if (put(a, b)) map.setView([a, b], 19);
-        return;
-      }
-      say('Searching...');
-      var bb = CFG.bounds;
-      fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ph&bounded=1' +
-            '&viewbox=' + bb.lngMin + ',' + bb.latMax + ',' + bb.lngMax + ',' + bb.latMin +
-            '&q=' + encodeURIComponent(q))
-        .then(function (r) { return r.json(); })
-        .then(function (list) {
-          if (!list.length) { say('Nothing found for "' + q + '". Try a barangay or school name, or pan the map yourself.', 'warn'); return; }
-          map.setView([parseFloat(list[0].lat), parseFloat(list[0].lon)], 18);
-          say('Map moved. Now click or drag the pin onto the exact building.');
-        })
-        .catch(function () { say('Search is not available right now. Pan the map yourself.', 'warn'); });
-    }
-    if (o.go && $(o.go)) $(o.go).addEventListener('click', find);
-    if (o.search && $(o.search)) $(o.search).addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') { e.preventDefault(); find(); }       // Enter must not submit the whole form
-    });
     return m;
   }
 
