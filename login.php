@@ -7,7 +7,7 @@ require __DIR__ . '/includes/google_auth.php';
 if (is_logged_in()) redirect(dashboard_url($_SESSION['role']));
 
 $errors = [];
-$showResend = false;   // the "Resend it" link only appears when someone tries to log in before verifying
+$showResend = false;   // kept for older code; the "Resend it" link is now always shown on the login form
 $email = '';
 $tab = ($_GET['tab'] ?? 'login') === 'register' ? 'register' : 'login';
 $old = ['name' => '', 'email' => '', 'phone' => ''];
@@ -34,13 +34,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $errors[] = 'This account is temporarily locked after too many wrong passwords. Try again in ' . LOCK_MINUTES . ' minutes.';
             } elseif (!$u || $u['role'] === 'admin' || !password_verify($pass, $u['password_hash'])) {
                 rate_hit('login');
+                $waiting = !$u && pending_password_matches($email, $pass);   // signed up but has not opened the email link yet
                 if ($u && $u['role'] !== 'admin') {
                     $fails = $u['failed_logins'] + 1;
                     $lock = $fails >= MAX_FAILED_LOGINS ? date('Y-m-d H:i:s', time() + LOCK_MINUTES * 60) : null;
                     db()->prepare('UPDATE users SET failed_logins = ?, locked_until = ? WHERE id = ?')
                         ->execute([$lock ? 0 : $fails, $lock, $u['id']]);
                 }
-                $errors[] = $generic;
+                if ($waiting) {
+                    $showResend = true;
+                    $errors[] = 'Please verify your email first. Your account is created once you open the link we sent to your email.';
+                } else {
+                    $errors[] = $generic;
+                }
             } elseif ($u['status'] === 'suspended') {
                 $errors[] = 'This account has been suspended. Please contact us if you think this is a mistake.';
             } elseif ($u['status'] === 'pending_email') {
@@ -74,34 +80,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (empty($_POST['agree'])) $errors[] = 'Please accept the Terms and Privacy Policy to continue.';
 
             if (!$errors) {
-                $s = db()->prepare('SELECT id, role, status FROM users WHERE email = ?');
+                $s = db()->prepare('SELECT 1 FROM users WHERE email = ?');
                 $s->execute([$old['email']]);
-                $ex = $s->fetch();
-                if ($ex && !($ex['status'] === 'pending_email' && $ex['role'] === 'seeker')) {
+                if ($s->fetchColumn()) {
                     $errors[] = 'That email is already registered. Try logging in instead.';
                 } else {
                     rate_hit('register');
-                    $status = REQUIRE_EMAIL_VERIFY ? 'pending_email' : 'active';
-                    $pdo = db();
-                    if ($ex) {
-                        // The same email signed up before but never confirmed it: this new sign-up replaces it.
-                        $uid = (int)$ex['id'];
-                        $pdo->prepare('UPDATE users SET full_name = ?, phone = ?, password_hash = ?, status = ? WHERE id = ?')
-                            ->execute([$old['name'], $old['phone'], password_hash($pass, PASSWORD_DEFAULT), $status, $uid]);
-                    } else {
-                        $pdo->beginTransaction();
-                        $pdo->prepare("INSERT INTO users (role, full_name, email, phone, password_hash, status) VALUES ('seeker', ?, ?, ?, ?, ?)")
-                            ->execute([$old['name'], $old['email'], $old['phone'], password_hash($pass, PASSWORD_DEFAULT), $status]);
-                        $uid = (int)$pdo->lastInsertId();
-                        $pdo->prepare('INSERT INTO seeker_profiles (user_id) VALUES (?)')->execute([$uid]);
-                        $pdo->commit();
+                    $hash = password_hash($pass, PASSWORD_DEFAULT);
+                    try {
+                        if (REQUIRE_EMAIL_VERIFY) {
+                            // No account yet: the sign-up waits until the email link is opened (see includes/verify_email.php).
+                            $r = start_registration('seeker', $old['email'], $old['name'], ['phone' => $old['phone'], 'password_hash' => $hash]);
+                            verification_flash($r, $old['email'], 'Almost done.');
+                        } else {
+                            $pdo = db();
+                            $pdo->beginTransaction();
+                            insert_account($pdo, 'seeker', $old['email'], $old['name'], ['phone' => $old['phone'], 'password_hash' => $hash]);
+                            $pdo->commit();
+                            flash('success', 'Account created. You can now log in.');
+                        }
+                        redirect('login.php');
+                    } catch (Throwable $e) {
+                        if (isset($pdo) && $pdo->inTransaction()) $pdo->rollBack();
+                        error_log('Seeker sign-up failed: ' . $e->getMessage());
+                        $errors[] = 'Something went wrong while creating your sign-up. Please try again.';
                     }
-                    if (REQUIRE_EMAIL_VERIFY) {
-                        verification_flash(issue_verification($uid, $old['name'], $old['email'], 'seeker'), $old['email'], 'Account created.');
-                    } else {
-                        flash('success', 'Account created. You can now log in.');
-                    }
-                    redirect('login.php');
                 }
             }
         }
@@ -142,7 +145,7 @@ require __DIR__ . '/includes/header.php';
         <div class="pw"><input id="l-pass" name="password" type="password" autocomplete="current-password" required>
           <button type="button" class="pw-btn" data-toggle-pw="l-pass">Show</button></div>
         <p class="small"><a href="<?= url('forgot-password.php') ?>">Forgot your password?</a></p>
-        <?php if ($showResend): ?><p class="small">Did not get the verification email? <a href="<?= url('resend-verification.php?email=' . urlencode($email)) ?>">Resend it</a></p><?php endif; ?>
+        <p class="small">Did not get the verification email? <a href="<?= url('resend-verification.php' . ($email !== '' ? '?email=' . urlencode($email) : '')) ?>">Resend it</a></p>
         <button class="btn btn-primary block" type="submit">Log in</button>
         <?= google_button('login', 'Continue with Google', true) ?>
         <p class="small center">New here? <a href="#" data-tab-link="register">Create a job seeker account</a></p>
