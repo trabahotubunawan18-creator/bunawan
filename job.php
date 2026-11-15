@@ -244,17 +244,23 @@ require __DIR__ . '/includes/' . ($inDash ? 'dash_top.php' : 'header.php');
 
       <div class="card jd-card">
         <h2 class="jd-h"><?= icon('pin', 18) ?> Work location</h2>
-        <p class="jd-addr"><?= e($job['work_address'] ?: $job['barangay']) ?>, Barangay <?= e($job['barangay']) ?>, Bunawan, Agusan del Sur</p>
+        <?php
+          $wa = trim((string)$job['work_address']);
+          $addrParts = [];
+          if ($wa !== '') $addrParts[] = $wa;
+          if ($wa === '' || stripos($wa, (string)$job['barangay']) === false) $addrParts[] = 'Barangay ' . $job['barangay'];
+          $addrParts[] = 'Bunawan';
+          $addrParts[] = 'Agusan del Sur';
+        ?>
+        <p class="jd-addr"><?= e(implode(', ', $addrParts)) ?></p>
         <?php if ($hasPin): ?>
           <div id="job-map" class="jd-map"></div>
           <p class="jd-maplinks"><a href="<?= e($mapUrl) ?>" target="_blank" rel="noopener noreferrer">Open in Google Maps</a> &middot; <a href="https://www.google.com/maps/dir/?api=1&destination=<?= e($job['latitude'] . ',' . $job['longitude']) ?>" target="_blank" rel="noopener noreferrer">Get directions</a></p>
           <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
           <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+          <script src="<?= url('assets/js/tbbmap.js') ?>?v=2"></script>
           <script>
-          (function(){var ll=[<?= (float)$job['latitude'] ?>,<?= (float)$job['longitude'] ?>];var m=L.map('job-map').setView(ll,17);
-            var st=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(m);
-            var sa=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,maxNativeZoom:<?= (int)SAT_NATIVE_ZOOM ?>,attribution:'Imagery &copy; Esri'});
-            L.control.layers({'Street':st,'Satellite':sa}).addTo(m);L.marker(ll).addTo(m).bindPopup(<?= json_encode($job['employer_name']) ?>);})();
+          TBBMap.viewer({map:'job-map', ll:[<?= (float)$job['latitude'] ?>,<?= (float)$job['longitude'] ?>], title:<?= json_encode($job['employer_name']) ?>});
           </script>
         <?php else: ?>
           <iframe class="jd-frame" title="Map of the work location" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
