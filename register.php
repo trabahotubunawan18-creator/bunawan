@@ -104,13 +104,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Email must be new
         if (!$errors) {
-            $s = $pdo->prepare('SELECT id, status FROM users WHERE email = ?');
+            $s = $pdo->prepare('SELECT 1 FROM users WHERE email = ?');
             $s->execute([$v['email']]);
-            if ($row = $s->fetch()) {
-                $add(1, $row['status'] === 'pending_email'
-                    ? 'This email already has a registration waiting to be verified. Open the verification email we sent, or go to the login page and choose "Resend it".'
-                    : 'That email is already registered. Try logging in instead.');
-            }
+            if ($s->fetchColumn()) $add(1, 'That email is already registered. Try logging in instead.');
         }
 
         // Uploads (only when everything else is valid, so we do not store files for a failed form)
@@ -133,41 +129,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!$errors) {
             rate_hit('register');
-            try {
-                $pdo->beginTransaction();
-                $status = ($g || !REQUIRE_EMAIL_VERIFY) ? 'active' : 'pending_email';   // Google already confirmed the email
-                $token  = null;   // the real (hashed) verification link is created by issue_verification() after saving
-                $pdo->prepare("INSERT INTO users (role, full_name, email, phone, password_hash, status, email_token) VALUES ('employer',?,?,?,?,?,?)")
-                    ->execute([$v['full_name'], $v['email'], $v['contact_phone'], password_hash($g ? bin2hex(random_bytes(32)) : $pass, PASSWORD_DEFAULT), $status, $token]);
-                $uid = (int)$pdo->lastInsertId();
-                $pdo->prepare("INSERT INTO employer_profiles
-                    (user_id, employer_name, employer_type, description, barangay_id, full_address, landmark, contact_person, contact_position,
-                     contact_phone, facebook_url, permit_number, permit_expiry, dti_sec_number, barangay_cert_path, permit_doc_path,
-                     workplace_photo_path, id_doc_path, selfie_path, agreed_terms_at, verification_status)
-                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),'pending')")
-                    ->execute([$uid, $v['employer_name'], $v['type'], $v['description'] ?: null, (int)$v['barangay'], $v['address'],
-                        $v['landmark'] ?: null, $v['contact_person'], $v['contact_position'] ?: null, $v['contact_phone'],
-                        $v['facebook'] ?: null, $v['permit_number'] ?: null, $v['type'] === 'registered_business' ? $v['permit_expiry'] : null,
-                        $v['dti'] ?: null, $paths['barangay_cert'], $paths['permit_doc'], $paths['workplace_photo'], $paths['id_doc'], $paths['selfie']]);
-                $ref = $pdo->prepare('INSERT INTO employer_references (employer_id, ref_name, ref_phone, relationship) VALUES (?,?,?,?)');
-                foreach ([1, 2] as $n) $ref->execute([$uid, $v["ref{$n}_name"], $v["ref{$n}_phone"], $v["ref{$n}_rel"]]);
-                $pdo->commit();
-            } catch (Throwable $e) {
-                if ($pdo->inTransaction()) $pdo->rollBack();
-                foreach ($saved as $f) delete_private($f);
-                error_log('Employer registration failed: ' . $e->getMessage());
-                $add(1, 'Something went wrong while saving your application. Please try again.');
-            }
-            if (!$errors) {
-                unset($_SESSION['google_signup']);
-                if (REQUIRE_EMAIL_VERIFY && !$g) {
-                    verification_flash(issue_verification($uid, $v['full_name'], $v['email'], 'employer'), $v['email'], 'Application received.');
+            $hash    = password_hash($g ? bin2hex(random_bytes(32)) : $pass, PASSWORD_DEFAULT);
+            $payload = ['v' => $v, 'paths' => $paths, 'password_hash' => $hash];
+            if (REQUIRE_EMAIL_VERIFY && !$g) {
+                // No account yet: the application waits (with its uploaded files) until the email link is opened.
+                // If the link is never opened, the application and its files are deleted automatically.
+                try {
+                    $r = start_registration('employer', $v['email'], $v['full_name'], $payload);
+                } catch (Throwable $e) {
+                    foreach ($saved as $f) delete_private($f);
+                    error_log('Employer registration failed: ' . $e->getMessage());
+                    $add(1, 'Something went wrong while saving your application. Please try again.');
+                }
+                if (!$errors) {
+                    verification_flash($r, $v['email'], 'Application received.');
                     redirect('login.php');
                 }
-                session_regenerate_id(true);
-                $_SESSION['uid'] = $uid; $_SESSION['role'] = 'employer'; $_SESSION['name'] = $v['full_name'];
-                flash('success', 'Application submitted. Our admin team will review it and you will see the result here.');
-                redirect('employer/index.php');
+            } else {
+                // Google already confirmed the email (or verification is switched off): create the account now.
+                try {
+                    $pdo->beginTransaction();
+                    $uid = insert_account($pdo, 'employer', $v['email'], $v['full_name'], $payload);
+                    $pdo->commit();
+                } catch (Throwable $e) {
+                    if ($pdo->inTransaction()) $pdo->rollBack();
+                    foreach ($saved as $f) delete_private($f);
+                    error_log('Employer registration failed: ' . $e->getMessage());
+                    $add(1, 'Something went wrong while saving your application. Please try again.');
+                }
+                if (!$errors) {
+                    unset($_SESSION['google_signup']);
+                    session_regenerate_id(true);
+                    $_SESSION['uid'] = $uid; $_SESSION['role'] = 'employer'; $_SESSION['name'] = $v['full_name'];
+                    flash('success', 'Application submitted. Our admin team will review it and you will see the result here.');
+                    redirect('employer/index.php');
+                }
             }
         } else {
             foreach ($saved as $f) delete_private($f);
@@ -396,7 +392,7 @@ function val(array $v, string $k): string { return e($v[$k] ?? ''); }
           <label class="check-row"><input type="checkbox" name="agree_fees" value="1" required> <span>I will <b>never charge applicants</b> any placement, training, or application fee.</span></label>
           <label class="check-row"><input type="checkbox" name="agree_honest" value="1" required> <span>All information and job posts I submit will be <b>true and honest</b>.</span></label>
           <label class="check-row"><input type="checkbox" name="agree_privacy" value="1" required> <span>I consent to Trabaho Tu Bunawan collecting and reviewing my information and documents for verification, under the Data Privacy Act of 2012 (RA 10173). Read the <a href="<?= url('privacy.php') ?>" target="_blank">Privacy Policy</a> and <a href="<?= url('terms.php') ?>" target="_blank">Terms</a>.</span></label>
-          <p class="step-note step-note-gold">After you submit, your account is created in <b>Pending</b> status. You can post jobs once our admin approves your verification.</p>
+          <p class="step-note step-note-gold">After you submit, we email you a link. Your account is created once you open it. You can post jobs once our admin approves your verification.</p>
         </div>
 
         <div class="wiz-nav">
