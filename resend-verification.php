@@ -21,12 +21,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Enter a valid email address.';
     } else {
         rate_hit('resend_verify');
-        $s = db()->prepare("SELECT id, full_name, role FROM users WHERE email = ? AND status = 'pending_email' AND role <> 'admin'");
-        $s->execute([$email]);
-        if ($u = $s->fetch()) {
-            $r = issue_verification((int)$u['id'], (string)$u['full_name'], $email, (string)$u['role']);
-            $devLink = $r['dev_link'];
+        $r = resend_pending_verification($email);
+        if (!$r['found']) {
+            // LEGACY: accounts made by the old flow that are still 'pending_email'. Remove once they are cleaned up.
+            $s = db()->prepare("SELECT id, full_name, role FROM users WHERE email = ? AND status = 'pending_email' AND role <> 'admin'");
+            $s->execute([$email]);
+            if ($u = $s->fetch()) $r = issue_verification((int)$u['id'], (string)$u['full_name'], $email, (string)$u['role']);
         }
+        $devLink = $r['dev_link'];
         // Same message whether or not the email needs verifying, so nobody can check who has an account.
         $sent = true;
     }
@@ -50,7 +52,7 @@ require_once __DIR__ . '/includes/back_button.php';
           <p style="margin:8px 0 0;word-break:break-all"><a href="<?= e($devLink) ?>"><?= e($devLink) ?></a></p>
         </div>
       <?php endif; ?>
-      <p class="small">Nothing in your inbox? Look in the spam or junk folder (the email is from <b>Trabaho Tu Bunawan</b>), or check that you typed your email correctly.</p>
+      <p class="small">Nothing in your inbox? Look in the spam or junk folder (the email is from <b>Trabaho Tu Bunawan</b>), or check that you typed your email correctly. A sign-up that is not confirmed within <?= (int)PENDING_HOURS ?> hours is removed, so if it has been longer, please <a href="<?= url('login.php?tab=register') ?>">register again</a>.</p>
       <a class="btn btn-outline block" href="<?= url('login.php') ?>">Back to login</a>
     <?php else: ?>
       <h1>Resend verification email</h1>
