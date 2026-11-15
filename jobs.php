@@ -63,7 +63,7 @@ $cnt = $pdo->prepare('SELECT COUNT(*) FROM (' . PUBLIC_JOB_SQL . $where . ') t')
 $cnt->execute($p);
 $total = (int)$cnt->fetchColumn();
 
-$sel = $hasPos ? str_replace('SELECT j.id,', $distSql('s') . ' AS distance_km, j.id,', PUBLIC_JOB_SQL) : PUBLIC_JOB_SQL;
+$sel = $hasPos ? str_replace('SELECT j.id,', 'SELECT ' . $distSql('s') . ' AS distance_km, j.id,', PUBLIC_JOB_SQL) : PUBLIC_JOB_SQL;
 $st = $pdo->prepare($sel . $where . ' ORDER BY ' . $orders[$sort] . ' LIMIT ' . ($sort === 'match' ? 200 : (int)$limit));
 $st->execute($hasPos ? $p + $distParams('s') : $p);
 $jobs = $st->fetchAll();
