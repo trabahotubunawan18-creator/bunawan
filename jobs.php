@@ -21,18 +21,6 @@ $sort     = in_array($_GET['sort'] ?? '', $isSeeker ? ['oldest', 'deadline', 'ma
 $page     = max(1, min(50, (int)($_GET['page'] ?? 1)));
 $perPage  = 12;
 
-// ---- "Jobs near me": the browser sends the seeker's position. It only sorts this list and is not saved. ----
-// Rounded to 3 decimals (about 100 m) so the web address does not give away an exact spot.
-$lat = isset($_GET['lat']) && is_numeric($_GET['lat']) ? round((float)$_GET['lat'], 3) : null;
-$lng = isset($_GET['lng']) && is_numeric($_GET['lng']) ? round((float)$_GET['lng'], 3) : null;
-if ($lat === null || $lng === null || $lat < -90 || $lat > 90 || $lng < -180 || $lng > 180) { $lat = $lng = null; }
-$hasPos = $lat !== null;
-$radius = $hasPos && in_array((int)($_GET['radius'] ?? 0), [1, 3, 5, 10], true) ? (int)$_GET['radius'] : 0;
-if ($hasPos && ($_GET['sort'] ?? '') === 'near') $sort = 'near';
-// Straight-line distance in km (haversine). Jobs without a pin get NULL. $s keeps the parameter names unique per use.
-$distSql = fn(string $s) => "(6371 * acos(LEAST(1, cos(radians(CAST(:la{$s}a AS double precision))) * cos(radians(j.latitude)) * cos(radians(j.longitude) - radians(CAST(:ln{$s} AS double precision))) + sin(radians(CAST(:la{$s}b AS double precision))) * sin(radians(j.latitude)))))";
-$distParams = fn(string $s) => ["la{$s}a" => $lat, "la{$s}b" => $lat, "ln{$s}" => $lng];
-
 $where = ''; $p = [];
 if ($q !== '') {
     $like = '%' . addcslashes($q, '%_\\') . '%';
@@ -48,14 +36,11 @@ if ($schedule !== '') { $where .= ' AND j.work_schedule = :ws'; $p['ws'] = $sche
 if ($noresume) $where .= " AND j.resume_requirement = 'none'";
 if ($skill !== '') { $where .= ' AND EXISTS (SELECT 1 FROM job_skills jsf WHERE jsf.job_id = j.id AND jsf.skill_key = :sk)'; $p['sk'] = $skill; }
 
-if ($radius) { $where .= ' AND ' . $distSql('r') . ' <= ' . (int)$radius; $p += $distParams('r'); }
-
 $orders = [
     'newest'   => 'is_premium DESC, j.created_at DESC',
     'oldest'   => 'j.created_at ASC',
     'deadline' => 'j.deadline ASC',
     'match'    => 'is_premium DESC, j.created_at DESC',
-    'near'     => 'distance_km ASC NULLS LAST, j.created_at DESC',
 ];
 $limit = $page * $perPage;
 
@@ -63,9 +48,8 @@ $cnt = $pdo->prepare('SELECT COUNT(*) FROM (' . PUBLIC_JOB_SQL . $where . ') t')
 $cnt->execute($p);
 $total = (int)$cnt->fetchColumn();
 
-$sel = $hasPos ? str_replace('SELECT j.id,', 'SELECT ' . $distSql('s') . ' AS distance_km, j.id,', PUBLIC_JOB_SQL) : PUBLIC_JOB_SQL;
-$st = $pdo->prepare($sel . $where . ' ORDER BY ' . $orders[$sort] . ' LIMIT ' . ($sort === 'match' ? 200 : (int)$limit));
-$st->execute($hasPos ? $p + $distParams('s') : $p);
+$st = $pdo->prepare(PUBLIC_JOB_SQL . $where . ' ORDER BY ' . $orders[$sort] . ' LIMIT ' . ($sort === 'match' ? 200 : (int)$limit));
+$st->execute($p);
 $jobs = $st->fetchAll();
 // Seekers who are logged in also see how well each job matches their skills
 $myKeys = $isSeeker ? skill_list_map(seeker_skill_list($pdo, (int)$_SESSION['uid'])) : [];
@@ -81,8 +65,7 @@ $categories = $pdo->query('SELECT id, name FROM job_categories WHERE is_active =
 
 $active = array_filter(['q' => $q, 'barangay' => $barangay, 'category' => $category, 'skill' => $skill, 'type' => $type,
     'salary_min' => $smin ?: '', 'student' => $student ? 1 : '', 'schedule' => $schedule,
-    'noresume' => $noresume ? 1 : '', 'sort' => $sort !== 'newest' ? $sort : '',
-    'lat' => $hasPos ? $lat : '', 'lng' => $hasPos ? $lng : '', 'radius' => $radius ?: ''], fn($v) => $v !== '' && $v !== 0);
+    'noresume' => $noresume ? 1 : '', 'sort' => $sort !== 'newest' ? $sort : ''], fn($v) => $v !== '' && $v !== 0);
 $moreUrl = 'jobs.php?' . http_build_query($active + ['page' => $page + 1]);
 ?>
 <section class="page-hero">
@@ -96,24 +79,6 @@ $moreUrl = 'jobs.php?' . http_build_query($active + ['page' => $page + 1]);
   <div class="listing">
     <aside class="card filters" aria-label="Filters">
       <form method="get" action="<?= url('jobs.php') ?>" class="form">
-        <div class="near-me" id="near-me">
-          <input type="hidden" name="lat" id="f-lat" value="<?= $hasPos ? e((string)$lat) : '' ?>" <?= $hasPos ? '' : 'disabled' ?>>
-          <input type="hidden" name="lng" id="f-lng" value="<?= $hasPos ? e((string)$lng) : '' ?>" <?= $hasPos ? '' : 'disabled' ?>>
-          <?php if ($hasPos): $noPos = $active; unset($noPos['lat'], $noPos['lng'], $noPos['radius']); if (($noPos['sort'] ?? '') === 'near') unset($noPos['sort']); ?>
-            <p class="near-me__status">Showing jobs near you</p>
-          <?php endif; ?>
-          <button class="btn btn-outline block" type="button" id="near-btn"><?= icon('pin', 16) ?> <?= $hasPos ? 'Update my location' : 'Jobs near me' ?></button>
-          <?php if ($hasPos): ?>
-            <label for="f-r">Distance</label>
-            <select id="f-r" name="radius">
-              <option value="">Any distance</option>
-              <?php foreach ([1, 3, 5, 10] as $rk): ?><option value="<?= $rk ?>" <?= $radius === $rk ? 'selected' : '' ?>>Within <?= $rk ?> km</option><?php endforeach; ?>
-            </select>
-            <a class="near-me__stop" href="<?= url('jobs.php' . ($noPos ? '?' . http_build_query($noPos) : '')) ?>">Stop using my location</a>
-          <?php endif; ?>
-          <p class="near-me__note" id="near-note"><?= $hasPos ? 'Distances are straight-line and approximate. Jobs without a map pin are listed last.' : 'Sorts jobs by distance using your phone’s location. We don’t save it.' ?></p>
-        </div>
-
         <label for="f-q">Job title, company, or keyword</label>
         <input id="f-q" type="search" name="q" maxlength="100" value="<?= e($q) ?>" placeholder="Example: cashier">
 
@@ -154,7 +119,6 @@ $moreUrl = 'jobs.php?' . http_build_query($active + ['page' => $page + 1]);
           <option value="newest" <?= $sort === 'newest' ? 'selected' : '' ?>>Newest first</option>
           <option value="oldest" <?= $sort === 'oldest' ? 'selected' : '' ?>>Oldest first</option>
           <option value="deadline" <?= $sort === 'deadline' ? 'selected' : '' ?>>Nearest deadline</option>
-          <?php if ($hasPos): ?><option value="near" <?= $sort === 'near' ? 'selected' : '' ?>>Nearest to me</option><?php endif; ?>
           <?php if ($isSeeker): ?><option value="match" <?= $sort === 'match' ? 'selected' : '' ?>>Best skills match</option><?php endif; ?>
         </select>
 
@@ -186,22 +150,4 @@ $moreUrl = 'jobs.php?' . http_build_query($active + ['page' => $page + 1]);
     </div>
   </div>
 </section>
-<script>
-(function(){
-  var b=document.getElementById('near-btn'); if(!b) return;
-  var box=document.getElementById('near-me'), f=b.closest('form'), la=document.getElementById('f-lat'), ln=document.getElementById('f-lng'), note=document.getElementById('near-note'), s=document.getElementById('f-sort');
-  b.addEventListener('click',function(){
-    if(!navigator.geolocation){box.classList.add('is-error');note.textContent='Your browser cannot share your location.';return;}
-    box.classList.remove('is-error'); note.textContent='Finding you...'; b.disabled=true;
-    navigator.geolocation.getCurrentPosition(function(p){
-      la.value=p.coords.latitude.toFixed(3); ln.value=p.coords.longitude.toFixed(3);
-      la.disabled=false; ln.disabled=false;
-      if(!s.querySelector('option[value="near"]')){var o=document.createElement('option');o.value='near';o.textContent='Nearest to me';s.appendChild(o);}
-      s.value='near'; f.submit();
-    },function(){
-      b.disabled=false; box.classList.add('is-error'); note.textContent='Could not get your location. Allow location access for this site and try again.';
-    },{enableHighAccuracy:false,timeout:10000,maximumAge:60000});
-  });
-})();
-</script>
 <?php require __DIR__ . '/includes/footer.php'; ?>
