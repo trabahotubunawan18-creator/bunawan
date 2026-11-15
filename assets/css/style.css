@@ -4347,7 +4347,5 @@ body.xp-open{overflow:hidden}
 .tbb-pop{font-weight:600;font-size:14px}
 .tbb-map-full{position:fixed!important;top:0;left:0;right:0;bottom:0;width:100%!important;height:100%!important;z-index:99999;border-radius:0!important;border:0!important}
 html.tbb-lock,html.tbb-lock body{overflow:hidden}
-.pj-mapsearch{display:flex;gap:8px;margin:0 0 8px}
-.pj-mapsearch input{flex:1;min-width:0;margin:0}
 .tbb-note.ok{color:#1b6e3a}
 .tbb-note.warn{color:#b3261e;font-weight:600}
