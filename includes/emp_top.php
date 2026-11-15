@@ -22,7 +22,6 @@ $navItems = [
     ['employer/premium.php', 'premium.php', 'Premium', 'star', false],
     ['employer/notifications.php', 'notifications.php', 'Notifications', 'bell', false],
     ['employer/settings.php', 'settings.php', 'Settings', 'cog', false],
-    ['employer/guide.php', 'guide.php', 'User Guide', 'file', false],
 ];
 $cssVer = filemtime(__DIR__ . '/../assets/css/style.css');
 ?>
