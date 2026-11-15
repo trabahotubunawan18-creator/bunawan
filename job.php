@@ -8,7 +8,7 @@ $pdo = db();
 
 // Only approved, non-expired jobs from verified employers are public.
 $st = $pdo->prepare("SELECT j.*, ep.employer_name, ep.employer_type, ep.description AS employer_desc, ep.verification_status,
-        ep.logo_path, ep.facebook_url, ep.peso_endorsed, ep.contact_phone, b.name AS barangay, c.name AS category,
+        ep.logo_path, ep.facebook_url, ep.contact_phone, b.name AS barangay, c.name AS category,
         CASE WHEN EXISTS(SELECT 1 FROM premium_subscriptions ps WHERE ps.employer_id = j.employer_id AND ps.status='active' AND ps.ends_on >= CURRENT_DATE) THEN 1 ELSE 0 END AS is_premium
     FROM job_posts j
     JOIN employer_profiles ep ON ep.user_id = j.employer_id
@@ -199,7 +199,6 @@ require __DIR__ . '/includes/' . ($inDash ? 'dash_top.php' : 'header.php');
         <div class="jd-chips">
           <?php if ($job['is_premium']): ?><span class="badge badge-gold">&#9733; Featured</span><?php endif; ?>
           <span class="badge badge-ver"><?= icon('shield', 14) ?> <?= e(verified_label($job['verification_status'])) ?></span>
-          <?php if ($job['peso_endorsed']): ?><span class="badge badge-ver">PESO Bunawan endorsed</span><?php endif; ?>
           <?php if ($job['student_friendly']): ?><span class="tag">Student-friendly</span><?php endif; ?>
           <?php if (($job['work_schedule'] ?? 'any') !== 'any'): ?><span class="tag"><?= e(WORK_SCHEDULES[$job['work_schedule']] ?? '') ?></span><?php endif; ?>
         </div>
