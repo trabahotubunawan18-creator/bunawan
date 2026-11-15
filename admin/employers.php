@@ -29,7 +29,7 @@ $whereSql = implode(' AND ', $where);
 // Get employers
 $sql = "
     SELECT ep.user_id, ep.employer_name, ep.logo_path, ep.employer_type, ep.verification_status,
-           ep.permit_expiry, ep.verified_at, ep.verification_expires, ep.peso_endorsed,
+           ep.permit_expiry, ep.verified_at, ep.verification_expires,
            ep.approved_post_count, ep.created_at,
            u.email, u.status AS user_status,
            b.name AS barangay
@@ -135,7 +135,6 @@ require __DIR__ . '/../includes/admin_top.php';
                   <div>
                     <strong><?= e($e['employer_name']) ?></strong>
                     <div class="small"><?= e($e['email']) ?></div>
-                    <?php if ($e['peso_endorsed']): ?><span class="badge badge-gold">PESO endorsed</span><?php endif; ?>
                   </div>
                 </div>
               </td>
