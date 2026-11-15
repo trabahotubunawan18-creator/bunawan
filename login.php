@@ -7,7 +7,7 @@ require __DIR__ . '/includes/google_auth.php';
 if (is_logged_in()) redirect(dashboard_url($_SESSION['role']));
 
 $errors = [];
-$showResend = false;   // kept for older code; the "Resend it" link is now always shown on the login form
+$showResend = false;   // true when someone logs in with an account that is still waiting for its email link
 $email = '';
 $tab = ($_GET['tab'] ?? 'login') === 'register' ? 'register' : 'login';
 $old = ['name' => '', 'email' => '', 'phone' => ''];
@@ -53,6 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $showResend = true;
                 $errors[] = 'Please verify your email first. Check your inbox for the verification link.';
             } else {
+                unset($_SESSION['resend_email']);
                 session_regenerate_id(true);
                 $_SESSION['uid'] = (int)$u['id'];
                 $_SESSION['role'] = $u['role'];
@@ -145,7 +146,8 @@ require __DIR__ . '/includes/header.php';
         <div class="pw"><input id="l-pass" name="password" type="password" autocomplete="current-password" required>
           <button type="button" class="pw-btn" data-toggle-pw="l-pass">Show</button></div>
         <p class="small"><a href="<?= url('forgot-password.php') ?>">Forgot your password?</a></p>
-        <p class="small">Did not get the verification email? <a href="<?= url('resend-verification.php' . ($email !== '' ? '?email=' . urlencode($email) : '')) ?>">Resend it</a></p>
+        <?php $resendTo = $showResend ? $email : (string)($_SESSION['resend_email'] ?? ''); ?>
+        <?php if ($showResend || $resendTo !== ''): ?><p class="small">Did not get the verification email? <a href="<?= url('resend-verification.php' . ($resendTo !== '' ? '?email=' . urlencode($resendTo) : '')) ?>">Resend it</a></p><?php endif; ?>
         <button class="btn btn-primary block" type="submit">Log in</button>
         <?= google_button('login', 'Continue with Google', true) ?>
         <p class="small center">New here? <a href="#" data-tab-link="register">Create a job seeker account</a></p>
