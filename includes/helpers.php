@@ -139,6 +139,7 @@ function render_job_card(array $j, bool $featured = false, ?array $save = null):
     </div>
     <ul class="facts">
       <li><?= icon('pin') ?> <?= e($j['barangay']) ?></li>
+      <?php if (isset($j['distance_km'])): $dk = (float)$j['distance_km']; ?><li class="is-dist"><?= icon('pin') ?> <?= $dk < 1 ? 'Less than 1 km away' : 'About ' . number_format($dk, 1) . ' km away' ?></li><?php endif; ?>
       <li><?= icon('briefcase') ?> <?= e(type_label($j['employment_type'])) ?></li>
       <li><?= icon('tag') ?> <?= e($j['category']) ?></li>
     </ul>
