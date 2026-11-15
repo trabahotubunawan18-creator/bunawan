@@ -217,9 +217,9 @@ $pjDayPct = DAILY_POST_LIMIT > 0 ? min(100, (int)round($limits['today'] / DAILY_
       <div><label for="pj-slots">Open slots</label><input id="pj-slots" name="slots" type="number" min="1" max="100" value="<?= e($v['slots']) ?>"></div>
     </div>
     <label for="pj-addr">Work address (optional)</label>
-    <input id="pj-addr" name="address" maxlength="255" value="<?= e($v['address']) ?>" placeholder="Purok, street, or landmark">
+    <input id="pj-addr" name="address" maxlength="255" value="<?= e($v['address']) ?>" placeholder="Purok and a landmark, e.g. Purok 6B, in front of Palawan">
     <label>Exact location on the map</label>
-    <p class="small pj-maphelp">Click the map, or drag the pin, to the exact place where the work is. Job seekers will see this pin. Switch to Satellite to find your building.</p>
+    <p class="small pj-maphelp">Click the map, or drag the pin, to the exact place where the work is. Job seekers will see this pin. Use the layers button to switch between Street and Satellite. Satellite photos may look blurry when zoomed in, so also write a landmark in the address box.</p>
     <div id="pj-map" class="pj-map"></div>
     <input type="hidden" id="pj-lat" name="lat" value="<?= e($v['lat']) ?>"><input type="hidden" id="pj-lng" name="lng" value="<?= e($v['lng']) ?>">
     <div class="btn-row"><button class="btn btn-outline btn-sm" type="button" id="pj-locate">Use my current location</button>
@@ -297,7 +297,7 @@ $pjDayPct = DAILY_POST_LIMIT > 0 ? min(100, (int)round($limits['today'] / DAILY_
   var start=has?[parseFloat(latEl.value),parseFloat(lngEl.value)]:[8.15,125.98];
   var map=L.map('pj-map').setView(start,has?17:13);
   var street=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'});
-  var sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Imagery &copy; Esri'});
+  var sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,maxNativeZoom:<?= (int)SAT_NATIVE_ZOOM ?>,attribution:'Imagery &copy; Esri'});
   street.addTo(map); L.control.layers({'Street':street,'Satellite':sat}).addTo(map);
   var marker=null;
   function put(lat,lng){
