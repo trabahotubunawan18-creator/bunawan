@@ -4332,3 +4332,17 @@ body.xp-open{overflow:hidden}
   .ug-step,.ug-link .ico{transition:none}
   .ug-step:hover{transform:none}
 }
+
+/* 15. JOBS NEAR ME ---------------------------------------------------------- */
+.near-me{margin:0 0 6px;padding:14px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--green-50)}
+.near-me .btn{background:#fff}
+.near-me .btn[disabled]{opacity:.7;cursor:progress}
+.near-me__status{display:flex;align-items:center;gap:8px;margin:0 0 10px;font-size:13.5px;font-weight:600;color:var(--green-700)}
+.near-me__status::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:var(--leaf);box-shadow:0 0 0 3px rgba(47,180,99,.2)}
+.near-me__note{margin:8px 0 0;font-size:12.5px;line-height:1.5;color:var(--muted)}
+.near-me.is-error .near-me__note{color:var(--red-ink)}
+.near-me label{margin:12px 0 6px}
+.near-me__stop{display:inline-block;margin-top:10px;font-size:13px;font-weight:600}
+.filters .near-me + label{margin-top:18px}
+.job .facts .is-dist{padding:2px 9px 2px 7px;border-radius:999px;background:var(--green-50);color:var(--green-700);font-weight:600}
+.job .facts .is-dist .ico{color:var(--green-700)}
