@@ -2729,7 +2729,8 @@ a.emp-notif-msg:hover{color:var(--green);text-decoration:underline}
 .emp-page .app-main .pj-pay{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 16px;align-items:start}
 .emp-page .app-main .pj-hint{margin:5px 0 0}
 .emp-page .app-main .pj-maphelp{margin:0 0 8px}
-.emp-page .app-main .pj-map{height:300px;border:1px solid var(--line-strong);border-radius:12px;overflow:hidden}
+.emp-page .app-main .pj-map{height:440px;border:1px solid var(--line-strong);border-radius:12px;overflow:hidden;background:#dfe5df}
+@media (max-width:640px){.emp-page .app-main .pj-map{height:380px}}
 .emp-page .app-main .pj-body .btn-row{margin-top:10px;align-items:center;gap:10px 12px}
 .emp-page .app-main .pj-body .btn-row .btn-outline{background:#fff;border-color:var(--line-strong)}
 .emp-page .app-main .pj-body .btn-row .btn-outline:hover{background:#FFF4C9;border-color:var(--gold)}
@@ -3151,7 +3152,8 @@ a.emp-notif-msg:hover{color:var(--green);text-decoration:underline}
 
 /* ---- Location ---- */
 .jd-addr{margin:0 0 10px;color:var(--ink-2)}
-.jd-map{height:280px;border-radius:12px;border:1px solid var(--line)}
+.jd-map{height:400px;border-radius:12px;border:1px solid var(--line);overflow:hidden;background:#dfe5df}
+@media (max-width:640px){.jd-map{height:340px}}
 .jd-frame{display:block;width:100%;height:260px;border:0;border-radius:12px}
 .jd-maplinks{margin:8px 0 0;font-size:13px;color:var(--muted)}
 
@@ -4333,16 +4335,19 @@ body.xp-open{overflow:hidden}
   .ug-step:hover{transform:none}
 }
 
-/* 15. JOBS NEAR ME ---------------------------------------------------------- */
-.near-me{margin:0 0 6px;padding:14px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--green-50)}
-.near-me .btn{background:#fff}
-.near-me .btn[disabled]{opacity:.7;cursor:progress}
-.near-me__status{display:flex;align-items:center;gap:8px;margin:0 0 10px;font-size:13.5px;font-weight:600;color:var(--green-700)}
-.near-me__status::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:var(--leaf);box-shadow:0 0 0 3px rgba(47,180,99,.2)}
-.near-me__note{margin:8px 0 0;font-size:12.5px;line-height:1.5;color:var(--muted)}
-.near-me.is-error .near-me__note{color:var(--red-ink)}
-.near-me label{margin:12px 0 6px}
-.near-me__stop{display:inline-block;margin-top:10px;font-size:13px;font-weight:600}
-.filters .near-me + label{margin-top:18px}
-.job .facts .is-dist{padding:2px 9px 2px 7px;border-radius:999px;background:var(--green-50);color:var(--green-700);font-weight:600}
-.job .facts .is-dist .ico{color:var(--green-700)}
+/* ---- Maps (assets/js/tbbmap.js) ---- */
+.tbb-pin{background:none;border:0}
+.tbb-pin svg{display:block;filter:drop-shadow(0 3px 3px rgba(0,0,0,.6))}
+.tbb-pin-pulse{position:absolute;left:20px;top:50px;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;background:rgba(229,57,53,.35);animation:tbbPulse 1.9s ease-out infinite;pointer-events:none}
+@keyframes tbbPulse{0%{transform:scale(.3);opacity:.9}100%{transform:scale(1.6);opacity:0}}
+@media (prefers-reduced-motion:reduce){.tbb-pin-pulse{animation:none;opacity:.5}}
+.tbb-ctl a{display:flex;align-items:center;justify-content:center;width:34px;height:34px;color:#222}
+.leaflet-container .leaflet-control-layers{font-size:14px}
+.leaflet-container .leaflet-control-scale-line{font-weight:600}
+.tbb-pop{font-weight:600;font-size:14px}
+.tbb-map-full{position:fixed!important;top:0;left:0;right:0;bottom:0;width:100%!important;height:100%!important;z-index:99999;border-radius:0!important;border:0!important}
+html.tbb-lock,html.tbb-lock body{overflow:hidden}
+.pj-mapsearch{display:flex;gap:8px;margin:0 0 8px}
+.pj-mapsearch input{flex:1;min-width:0;margin:0}
+.tbb-note.ok{color:#1b6e3a}
+.tbb-note.warn{color:#b3261e;font-weight:600}
