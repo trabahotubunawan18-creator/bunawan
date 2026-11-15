@@ -217,12 +217,14 @@ $pjDayPct = DAILY_POST_LIMIT > 0 ? min(100, (int)round($limits['today'] / DAILY_
       <div><label for="pj-slots">Open slots</label><input id="pj-slots" name="slots" type="number" min="1" max="100" value="<?= e($v['slots']) ?>"></div>
     </div>
     <label for="pj-addr">Work address (optional)</label>
-    <input id="pj-addr" name="address" maxlength="255" value="<?= e($v['address']) ?>" placeholder="Purok and a landmark, e.g. Purok 6B, in front of Palawan">
+    <input id="pj-addr" name="address" maxlength="255" value="<?= e($v['address']) ?>" placeholder="Purok, street, or landmark">
     <label>Exact location on the map</label>
-    <p class="small pj-maphelp">Click the map, or drag the pin, to the exact place where the work is. Job seekers will see this pin. Use the layers button to switch between Street and Satellite. Satellite photos may look blurry when zoomed in, so also write a landmark in the address box.</p>
+    <p class="small pj-maphelp">Find your building on the satellite photo, then click it. You can drag the pin to adjust. Zoom in with the + button until you can see the roof. Job seekers will see this pin.</p>
+    <div class="pj-mapsearch"><input id="pj-search" type="text" autocomplete="off" placeholder="Search a place, or paste coordinates (example: 8.1234, 125.9876)"><button class="btn btn-outline btn-sm" type="button" id="pj-go">Find</button></div>
     <div id="pj-map" class="pj-map"></div>
     <input type="hidden" id="pj-lat" name="lat" value="<?= e($v['lat']) ?>"><input type="hidden" id="pj-lng" name="lng" value="<?= e($v['lng']) ?>">
     <div class="btn-row"><button class="btn btn-outline btn-sm" type="button" id="pj-locate">Use my current location</button>
+      <button class="btn btn-outline btn-sm" type="button" id="pj-center">Put pin at map center</button>
       <span class="small" id="pj-pin-note"></span></div>
     </div>
   </section>
@@ -290,31 +292,9 @@ $pjDayPct = DAILY_POST_LIMIT > 0 ? min(100, (int)round($limits['today'] / DAILY_
 </div>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="<?= url('assets/js/tbbmap.js') ?>?v=2"></script>
 <script>
-(function(){
-  var latEl=document.getElementById('pj-lat'), lngEl=document.getElementById('pj-lng'), note=document.getElementById('pj-pin-note');
-  var has=latEl.value!==''&&lngEl.value!=='';
-  var start=has?[parseFloat(latEl.value),parseFloat(lngEl.value)]:[8.15,125.98];
-  var map=L.map('pj-map').setView(start,has?17:13);
-  var street=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'});
-  var sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,maxNativeZoom:<?= (int)SAT_NATIVE_ZOOM ?>,attribution:'Imagery &copy; Esri'});
-  street.addTo(map); L.control.layers({'Street':street,'Satellite':sat}).addTo(map);
-  var marker=null;
-  function put(lat,lng){
-    if(!marker){marker=L.marker([lat,lng],{draggable:true}).addTo(map);marker.on('dragend',function(){var p=marker.getLatLng();put(p.lat,p.lng);});}
-    else marker.setLatLng([lat,lng]);
-    latEl.value=lat.toFixed(7); lngEl.value=lng.toFixed(7);
-    note.textContent='Pin set ('+lat.toFixed(5)+', '+lng.toFixed(5)+')';
-  }
-  if(has) put(start[0],start[1]); else note.textContent='No pin yet. Click the map.';
-  map.on('click',function(e){put(e.latlng.lat,e.latlng.lng);});
-  document.getElementById('pj-locate').addEventListener('click',function(){
-    if(!navigator.geolocation){note.textContent='Your browser cannot share your location.';return;}
-    note.textContent='Finding you...';
-    navigator.geolocation.getCurrentPosition(function(p){put(p.coords.latitude,p.coords.longitude);map.setView([p.coords.latitude,p.coords.longitude],18);},
-      function(){note.textContent='Could not get your location. Click the map instead.';},{enableHighAccuracy:true,timeout:10000});
-  });
-})();
+TBBMap.picker({map:'pj-map', lat:'pj-lat', lng:'pj-lng', note:'pj-pin-note', locate:'pj-locate', center:'pj-center', search:'pj-search', go:'pj-go'});
 </script>
 <script src="<?= url('assets/js/postjob.js') ?>"></script>
 <script>
