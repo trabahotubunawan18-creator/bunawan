@@ -22,6 +22,7 @@ $navItems = [
     ['employer/premium.php', 'premium.php', 'Premium', 'star', false],
     ['employer/notifications.php', 'notifications.php', 'Notifications', 'bell', false],
     ['employer/settings.php', 'settings.php', 'Settings', 'cog', false],
+    ['employer/guide.php', 'guide.php', 'User Guide', 'file', false],
 ];
 $cssVer = filemtime(__DIR__ . '/../assets/css/style.css');
 ?>
@@ -62,7 +63,6 @@ $cssVer = filemtime(__DIR__ . '/../assets/css/style.css');
       <?php endforeach; ?>
     </nav>
     <div class="side-foot">
-      <a class="side-link" href="<?= url('guide.php#employers') ?>" target="_blank" rel="noopener"><?= icon('list', 17) ?> Need help? Guide</a>
       <form method="post" action="<?= url('logout.php') ?>"><?= csrf_field() ?>
         <button class="side-link" type="submit"><?= icon('logout', 17) ?> Log out</button></form>
     </div>
