@@ -221,8 +221,9 @@ function complete_registration(string $token): string {
 
 // Sets the message the person sees after signing up.
 function verification_flash(array $r, string $email, string $prefix): void {
+    $_SESSION['resend_email'] = $email;   // makes the "Resend it" link appear on the login page for this visitor only
     if ($r['sent']) {
-        flash('success', $prefix . ' We sent a link to ' . $email . '. Open it to create your account.');
+        flash('success', $prefix . ' We sent a link to ' . $email . '. Open it to create your account (check spam too).');
     } elseif (!empty($r['dev_link'])) {
         flash('info', $prefix . ' Local testing: the email could not be sent, so open this link: ' . $r['dev_link']);
     } else {
