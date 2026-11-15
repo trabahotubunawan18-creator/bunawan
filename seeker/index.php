@@ -1,7 +1,6 @@
 <?php
 require __DIR__ . '/../includes/auth.php';
 require __DIR__ . '/../includes/helpers.php';
-require __DIR__ . '/../includes/guide_box.php';
 require_role('seeker');
 $pdo = db(); $uid = (int)$_SESSION['uid'];
 
@@ -57,14 +56,6 @@ require __DIR__ . '/../includes/dash_top.php';
     </div>
   </div>
 </section>
-
-<?php if (guide_first_visit($uid)): ?>
-<?= guide_box('Welcome! Here is how to get started', 'Three quick steps to find your first job.', [
-    ['Create your account', true],
-    ['Add your mobile number and skills', !empty($me['phone']) && !empty($me['skills'])],
-    ['Browse jobs near you and apply', false],
-]) ?>
-<?php endif; ?>
 
 <div class="statcards">
   <div class="card statcard"><span class="si si-green"><?= icon('send', 22) ?></span><div><strong><?= $nApps ?></strong><span>Applications</span></div></div>
