@@ -162,7 +162,7 @@ require __DIR__ . '/../includes/admin_top.php';
 <link rel="stylesheet" href="<?= e(url('assets/css/admin-complaints.css')) ?>">
 <div class="cp-page">
 <div class="cp-hero">
-  <div><h1>Complaints</h1><p><?php if ($type === 'applicants'): ?>Reports from employers about job seekers, grouped by seeker. Dismiss them, warn the seeker, or suspend the seeker.<?php else: ?>Complaints filed by job seekers, grouped by job. Dismiss them, warn the employer, remove the job, or suspend the employer.<?php endif; ?></p></div>
+  <div><h1>Complaints</h1><p>Reports from job seekers about jobs, and from employers about applicants.</p></div>
   <?php if ($tabCount['open'] + $apCount['open'] > 0): ?>
     <span style="display:flex;gap:8px;flex-wrap:wrap">
       <?php if ($tabCount['open'] > 0): ?><span class="cp-chip cp-chip-gold"><?= icon('flag', 16) ?><?= number_format($tabCount['open']) ?> <?= $tabCount['open'] === 1 ? 'job needs' : 'jobs need' ?> review</span><?php endif; ?>
