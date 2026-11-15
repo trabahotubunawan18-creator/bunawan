@@ -1,6 +1,10 @@
 <?php
 // One page for first-time users: "For Job Seekers" and "For Employers" tabs.
 // guide.php opens on the job seeker tab. guide.php#employers opens the employer tab.
+require_once __DIR__ . '/includes/auth.php';
+// Logged-in users read the guide for their own role, inside their dashboard.
+if (is_logged_in() && ($_SESSION['role'] ?? '') === 'seeker') redirect('seeker/guide.php');
+if (is_logged_in() && ($_SESSION['role'] ?? '') === 'employer') redirect('employer/guide.php');
 $pageTitle = 'Guide';
 $bodyClass = 'guide-page';
 require __DIR__ . '/includes/header.php';
