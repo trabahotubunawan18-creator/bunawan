@@ -253,7 +253,7 @@ require __DIR__ . '/includes/' . ($inDash ? 'dash_top.php' : 'header.php');
           <script>
           (function(){var ll=[<?= (float)$job['latitude'] ?>,<?= (float)$job['longitude'] ?>];var m=L.map('job-map').setView(ll,17);
             var st=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(m);
-            var sa=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Imagery &copy; Esri'});
+            var sa=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,maxNativeZoom:<?= (int)SAT_NATIVE_ZOOM ?>,attribution:'Imagery &copy; Esri'});
             L.control.layers({'Street':st,'Satellite':sa}).addTo(m);L.marker(ll).addTo(m).bindPopup(<?= json_encode($job['employer_name']) ?>);})();
           </script>
         <?php else: ?>
