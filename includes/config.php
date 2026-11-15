@@ -36,6 +36,7 @@ cfg_define('SESSION_IDLE', 1800);        // log out after 30 minutes of no activ
 cfg_define('REQUIRE_EMAIL_VERIFY', true);  // new accounts must confirm their email first. Set to false (or the REQUIRE_EMAIL_VERIFY variable to 0) to turn it off
 cfg_define('MAX_FAILED_LOGINS', 5);      // lock the account after this many wrong passwords
 cfg_define('LOCK_MINUTES', 15);
+cfg_define('SAT_NATIVE_ZOOM', 15);       // last zoom level where the Esri satellite photos exist around Bunawan. Beyond it the photo is stretched instead of showing a grey tile. Lower it if grey tiles still appear.
 
 // ---------- Email (needed so "Forgot password" really sends an email) ----------
 // Easiest option: a Gmail account with an App Password.
