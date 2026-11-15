@@ -19,7 +19,7 @@ $keys = ['permit_valid' => 'Permit or registration is valid and not expired', 'a
          'phone_called' => 'Contact number called and answered', 'id_matches' => 'ID is valid and matches the contact person, and the selfie shows the same person holding it', 'reference_called' => 'At least one reference called', 'facebook_checked' => 'Facebook page checked (if any)'];
 $saved = json_decode($p['checklist_json'] ?? '', true) ?: [];
 $checks = $saved['checks'] ?? []; $privNote = $saved['note'] ?? '';
-$msg = ''; $peso = (int)$p['peso_endorsed']; $expiryIn = $p['verification_expires'] ?? '';
+$msg = ''; $expiryIn = $p['verification_expires'] ?? '';
 $errors = [];
 
 $allowed = [
@@ -38,7 +38,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $checks = []; foreach ($keys as $k => $_) $checks[$k] = !empty($_POST['chk_' . $k]);
         $privNote = mb_substr(trim($_POST['private_note'] ?? ''), 0, 1000);
         $msg = mb_substr(trim($_POST['message'] ?? ''), 0, 1000);
-        $peso = !empty($_POST['peso']) ? 1 : 0;
         $expiryIn = trim($_POST['expiry'] ?? '');
         $json = json_encode(['checks' => $checks, 'note' => $privNote]);
 
@@ -47,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         };
 
         if ($act === 'save') {
-            $pdo->prepare('UPDATE employer_profiles SET checklist_json = ?, peso_endorsed = ? WHERE user_id = ?')->execute([$json, $peso, $id]);
+            $pdo->prepare('UPDATE employer_profiles SET checklist_json = ? WHERE user_id = ?')->execute([$json, $id]);
             log_admin('verification_checklist_saved', 'employer', $id);
             flash('success', 'Checklist and notes saved.'); redirect('admin/verify-review.php?id=' . $id);
         }
@@ -73,8 +72,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $new = $act === 'approve_business' ? 'verified_business' : 'verified_local';
                 $pdo->beginTransaction();
                 $pdo->prepare('UPDATE employer_profiles SET verification_status = ?, verified_by = ?, verified_at = NOW(), verification_expires = ?,
-                        peso_endorsed = ?, checklist_json = ?, verification_notes = NULL, rejection_reason = NULL WHERE user_id = ?')
-                    ->execute([$new, $adminId, $exp, $peso, $json, $id]);
+                        checklist_json = ?, verification_notes = NULL, rejection_reason = NULL WHERE user_id = ?')
+                    ->execute([$new, $adminId, $exp, $json, $id]);
                 $notify('Good news! Your verification was approved. You can now post jobs.');
                 log_admin('employer_approved_' . ($act === 'approve_business' ? 'business' : 'local'), 'employer', $id, 'Valid until ' . $exp);
                 $pdo->commit();
@@ -85,13 +84,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!$errors) {
                 $pdo->beginTransaction();
                 if ($act === 'more_info') {
-                    $pdo->prepare("UPDATE employer_profiles SET verification_status = 'more_info', verification_notes = ?, checklist_json = ?, peso_endorsed = ? WHERE user_id = ?")->execute([$msg, $json, $peso, $id]);
+                    $pdo->prepare("UPDATE employer_profiles SET verification_status = 'more_info', verification_notes = ?, checklist_json = ? WHERE user_id = ?")->execute([$msg, $json, $id]);
                     $notify('Our team needs more information for your verification. Please open Verification to see the note.');
                 } elseif ($act === 'reject') {
-                    $pdo->prepare("UPDATE employer_profiles SET verification_status = 'rejected', rejection_reason = ?, checklist_json = ?, peso_endorsed = 0, verified_by = NULL, verified_at = NULL WHERE user_id = ?")->execute([$msg, $json, $id]);
+                    $pdo->prepare("UPDATE employer_profiles SET verification_status = 'rejected', rejection_reason = ?, checklist_json = ?, verified_by = NULL, verified_at = NULL WHERE user_id = ?")->execute([$msg, $json, $id]);
                     $notify('Your verification was not approved. Open Verification to see the reason.');
                 } else {
-                    $pdo->prepare("UPDATE employer_profiles SET verification_status = 'suspended', rejection_reason = ?, checklist_json = ?, peso_endorsed = 0 WHERE user_id = ?")->execute([$msg, $json, $id]);
+                    $pdo->prepare("UPDATE employer_profiles SET verification_status = 'suspended', rejection_reason = ?, checklist_json = ? WHERE user_id = ?")->execute([$msg, $json, $id]);
                     $pdo->prepare("UPDATE users SET status = 'suspended' WHERE id = ? AND role = 'employer'")->execute([$id]);
                     $pdo->prepare("UPDATE job_posts SET status = 'closed' WHERE employer_id = ? AND status IN ('approved','pending')")->execute([$id]);
                 }
@@ -213,7 +212,6 @@ require __DIR__ . '/../includes/admin_top.php';
     <label for="d-note">Private notes (only admins see these)</label>
     <textarea id="d-note" name="private_note" rows="3" maxlength="1000"><?= e($privNote) ?></textarea>
 
-    <label class="check-row"><input type="checkbox" name="peso" value="1" <?= $peso ? 'checked' : '' ?>> <span>PESO Bunawan endorsed</span></label>
     <?php if ($can('approve_business') || $can('approve_local')): ?>
       <label for="d-exp">Verification valid until (optional)</label>
       <input id="d-exp" type="date" name="expiry" value="<?= e($expiryIn) ?>">
