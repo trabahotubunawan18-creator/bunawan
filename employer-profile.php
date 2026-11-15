@@ -7,7 +7,7 @@ require __DIR__ . '/includes/helpers.php';
 $id = (int)($_GET['id'] ?? 0);
 $pdo = db();
 $st = $pdo->prepare("SELECT ep.user_id, ep.employer_name, ep.employer_type, ep.description, ep.full_address, ep.landmark,
-        ep.facebook_url, ep.logo_path, ep.verification_status, ep.peso_endorsed, b.name AS barangay,
+        ep.facebook_url, ep.logo_path, ep.verification_status, b.name AS barangay,
         CASE WHEN EXISTS(SELECT 1 FROM premium_subscription_jobs psj JOIN premium_subscriptions ps ON ps.id = psj.subscription_id
                WHERE ps.employer_id = ep.user_id AND ps.status = 'active' AND ps.ends_on >= CURRENT_DATE) THEN 1 ELSE 0 END AS is_premium
     FROM employer_profiles ep
@@ -46,7 +46,6 @@ require_once __DIR__ . '/includes/back_button.php';
         <div class="ep-badges">
           <?php if ($isPublic): ?><span class="ep-badge ep-badge-ok"><?= icon('shield', 14) ?> <?= e(verified_label($emp['verification_status'])) ?></span><?php endif; ?>
           <?php if ($emp['is_premium']): ?><span class="ep-badge ep-badge-gold">&#9733; Premium</span><?php endif; ?>
-          <?php if ($emp['peso_endorsed']): ?><span class="ep-badge">PESO endorsed</span><?php endif; ?>
         </div>
       </div>
     </div>
