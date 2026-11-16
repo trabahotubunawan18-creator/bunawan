@@ -4350,4 +4350,20 @@ html.tbb-lock,html.tbb-lock body{overflow:hidden}
 .tbb-note.ok{color:#1b6e3a}
 .tbb-note.warn{color:#b3261e;font-weight:600}
 
-
+/* ===== Complaints page: type dropdown (Reported jobs / Reported applicants) ===== */
+.cp-filter{display:flex;flex-wrap:wrap;align-items:flex-start;gap:10px;margin-bottom:18px}
+.cp-filter .cp-tabs{margin-bottom:0}
+.cp-sep{width:1px;height:30px;margin:4px 2px 0;background:var(--line-strong)}
+.cp-dd{position:relative}
+.cp-dd>summary{list-style:none;display:inline-flex;align-items:center;justify-content:space-between;gap:10px;min-width:230px;height:38px;padding:0 10px 0 14px;border-radius:99px;background:#fff;border:1px solid var(--line-strong);font-size:13.5px;font-weight:600;color:var(--ink-2);cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.cp-dd>summary::-webkit-details-marker{display:none}
+.cp-dd>summary:hover{border-color:var(--leaf)}
+.cp-dd[open]>summary{border-color:var(--green);box-shadow:var(--ring)}
+.cp-dd-l{display:inline-flex;align-items:center;gap:8px}
+.cp-dd-chev{flex:none;transition:transform .15s}
+.cp-dd[open] .cp-dd-chev{transform:rotate(180deg)}
+.cp-dd-menu{position:absolute;top:calc(100% + 6px);left:0;min-width:100%;z-index:30;padding:6px;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-md)}
+.cp-dd-menu a{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 10px 9px 12px;border-radius:9px;font-size:13.5px;font-weight:600;color:var(--ink-2);white-space:nowrap}
+.cp-dd-menu a:hover{text-decoration:none;background:var(--green-50);color:var(--forest)}
+.cp-dd-menu a.on{background:var(--green-50);color:var(--forest)}
+@media (max-width:640px){.cp-sep{display:none}.cp-dd,.cp-dd>summary{width:100%}}
