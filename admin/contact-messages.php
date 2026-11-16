@@ -92,6 +92,7 @@ require __DIR__ . '/../includes/admin_top.php';
 ?>
 <link rel="stylesheet" href="<?= e(url('assets/css/admin-contact-messages.css')) ?>?v=<?= filemtime(__DIR__ . '/../assets/css/admin-contact-messages.css') ?>">
 <div class="cm-page">
+  <?php require __DIR__ . '/../includes/inbox_tabs.php'; ?>
   <div class="cm-hero">
     <div>
       <h1>Contact Messages</h1>
