@@ -12,6 +12,8 @@ $nPremium = $cnt("SELECT COUNT(*) FROM premium_subscriptions WHERE status = 'req
 $nUnread = $cnt('SELECT COUNT(*) FROM notifications WHERE user_id = ' . (int)$_SESSION['uid'] . ' AND is_read = 0');
 $flash = get_flash();
 $cssVer = filemtime(__DIR__ . '/../assets/css/style.css');
+// Complaints and Contact Messages share one sidebar item: Inbox (opens whichever has something waiting)
+$inboxHref = ($nComplaints === 0 && $nContact > 0) ? 'admin/contact-messages.php' : 'admin/complaints.php';
 // [link, file, label, icon, count, built?]
 $navGroups = ['verification.php' => 'Moderation', 'reports.php' => 'Insights & content', 'activity-log.php' => 'System'];
 $navItems = [
@@ -20,8 +22,7 @@ $navItems = [
     ['admin/flagged.php', 'flagged.php', 'Flagged posts', 'list', $nFlag, true],
     ['admin/jobs.php', 'jobs.php', 'Jobs', 'briefcase', 0, true],
     ['admin/users.php', 'users.php', 'Users', 'users', 0, true],
-    ['admin/complaints.php', 'complaints.php', 'Complaints', 'flag', $nComplaints, true],
-    ['admin/contact-messages.php', 'contact-messages.php', 'Contact Messages', 'mail', $nContact, true],
+    [$inboxHref, 'inbox', 'Inbox', 'mail', $nComplaints + $nContact, true],
     ['admin/reports.php', 'reports.php', 'Reports', 'chart', 0, true],
     ['admin/categories.php', 'categories.php', 'Categories', 'tag', 0, true],
     ['admin/skills.php', 'skills.php', 'Skills', 'bolt', 0, true],
@@ -53,7 +54,7 @@ $navItems = [
       <?php foreach ($navItems as [$href, $file, $label, $ic, $n, $built]): ?>
         <?php if (isset($navGroups[$file])): ?><p class="side-label"><?= e($navGroups[$file]) ?></p><?php endif; ?>
         <?php if ($built): ?>
-          <a href="<?= url($href) ?>" <?= ($cur === $file || ($file === 'verification.php' && $cur === 'verify-review.php') || ($cur === 'job-review.php' && (($_GET['from'] ?? '') === 'flagged' ? $file === 'flagged.php' : $file === 'jobs.php'))) ? 'class="on" aria-current="page"' : '' ?>>
+          <a href="<?= url($href) ?>" <?= ($cur === $file || ($file === 'inbox' && in_array($cur, ['complaints.php', 'contact-messages.php'], true)) || ($file === 'verification.php' && $cur === 'verify-review.php') || ($cur === 'job-review.php' && (($_GET['from'] ?? '') === 'flagged' ? $file === 'flagged.php' : $file === 'jobs.php'))) ? 'class="on" aria-current="page"' : '' ?>>
             <?= icon($ic, 19) ?><span><?= e($label) ?></span><?php if ($n > 0): ?><em class="count"><?= $n ?></em><?php endif; ?>
           </a>
         <?php else: ?>
