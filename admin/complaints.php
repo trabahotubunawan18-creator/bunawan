@@ -172,17 +172,30 @@ require __DIR__ . '/../includes/admin_top.php';
   <?php else: ?><span class="cp-chip cp-chip-glass"><?= icon('check', 16) ?>All caught up</span><?php endif; ?>
 </div>
 
-<nav class="cp-types" aria-label="Complaint type">
-  <a class="<?= $type === 'jobs' ? 'on' : '' ?>" href="<?= url('admin/complaints.php') ?>"<?= $type === 'jobs' ? ' aria-current="page"' : '' ?>>Job complaints<span class="cp-badge"><?= $tabCount['open'] ?></span></a>
-  <a class="<?= $type === 'applicants' ? 'on' : '' ?>" href="<?= url('admin/complaints.php?type=applicants') ?>"<?= $type === 'applicants' ? ' aria-current="page"' : '' ?>>Applicant reports<span class="cp-badge"><?= $apCount['open'] ?></span></a>
-</nav>
-
+<div class="cp-filter">
+  <details class="cp-dd" id="cpDd">
+    <summary aria-label="Choose what to review">
+      <span class="cp-dd-l"><?= icon('flag', 16) ?><span><?= $type === 'applicants' ? 'Reported applicants' : 'Reported jobs' ?></span><span class="cp-badge"><?= $type === 'applicants' ? $apCount['open'] : $tabCount['open'] ?></span></span>
+      <svg class="cp-dd-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+    </summary>
+    <div class="cp-dd-menu">
+      <a class="<?= $type === 'jobs' ? 'on' : '' ?>" href="<?= url('admin/complaints.php') ?>"<?= $type === 'jobs' ? ' aria-current="page"' : '' ?>>Reported jobs<span class="cp-badge"><?= $tabCount['open'] ?></span></a>
+      <a class="<?= $type === 'applicants' ? 'on' : '' ?>" href="<?= url('admin/complaints.php?type=applicants') ?>"<?= $type === 'applicants' ? ' aria-current="page"' : '' ?>>Reported applicants<span class="cp-badge"><?= $apCount['open'] ?></span></a>
+    </div>
+  </details>
+  <span class="cp-sep" aria-hidden="true"></span>
+  <nav class="cp-tabs" aria-label="Filter complaints"><?php foreach ($tabs as $k => $l): ?><a class="<?= $tab === $k ? 'on' : '' ?>" href="<?= url('admin/complaints.php?' . $typeQs . 'tab=' . $k) ?>"<?= $tab === $k ? ' aria-current="page"' : '' ?>><i class="cp-dot" style="--c:<?= $tabDot[$k] ?>"></i><?= e($l) ?><span class="cp-badge"><?= $type === 'applicants' ? $apCount[$k] : $tabCount[$k] ?></span></a><?php endforeach; ?></nav>
+</div>
+<script>
+document.addEventListener('click',function(e){var d=document.getElementById('cpDd');if(d&&d.open&&!d.contains(e.target))d.removeAttribute('open')});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){var d=document.getElementById('cpDd');if(d)d.removeAttribute('open')}});
+</script>
 <?php if ($type === 'applicants' && !$apReady): ?>
   <div class="alert alert-info" role="status">Applicant reports need a one-time database update. Run <b>database/migrations/applicant_reports.sql</b> in the Supabase SQL editor, then reload this page.</div>
 <?php endif; ?>
 
 
-<nav class="cp-tabs" aria-label="Filter complaints"><?php foreach ($tabs as $k => $l): ?><a class="<?= $tab === $k ? 'on' : '' ?>" href="<?= url('admin/complaints.php?' . $typeQs . 'tab=' . $k) ?>"<?= $tab === $k ? ' aria-current="page"' : '' ?>><i class="cp-dot" style="--c:<?= $tabDot[$k] ?>"></i><?= e($l) ?><span class="cp-badge"><?= $type === 'applicants' ? $apCount[$k] : $tabCount[$k] ?></span></a><?php endforeach; ?></nav>
+
 
 <?php if (!$groups): ?><div class="cp-empty"><div class="cp-empty-ico"><?= icon('check', 26) ?></div><h3><?= $type === 'applicants' ? 'No reports here' : 'No complaints here' ?></h3><p><?= e($type === 'applicants' ? str_replace(['complaints', 'complaint'], ['reports', 'report'], $emptyMsg[$tab]) : $emptyMsg[$tab]) ?></p></div><?php endif; ?>
 
