@@ -224,10 +224,11 @@ function val(array $v, string $k): string { return e($v[$k] ?? ''); }
           <div class="row2"<?= $g ? ' style="display:none"' : '' ?>>
             <div><label for="e-pass">Password</label>
               <div class="pw"><input id="e-pass" name="password" type="password" minlength="8" autocomplete="new-password"<?= $g ? ' disabled' : ' required' ?>>
-                <button type="button" class="pw-btn" data-toggle-pw="e-pass">Show</button></div>
+                <button type="button" class="pw-btn" data-toggle-pw="e-pass" aria-label="Show password"></button></div>
               <div class="meter"><span id="e-meter"></span></div><small class="small" id="e-meter-text">At least 8 characters with uppercase, lowercase, a number and a symbol.</small></div>
             <div><label for="e-pass2">Confirm password</label>
-              <input id="e-pass2" name="password2" type="password" autocomplete="new-password"<?= $g ? ' disabled' : ' required' ?>></div>
+              <div class="pw"><input id="e-pass2" name="password2" type="password" autocomplete="new-password"<?= $g ? ' disabled' : ' required' ?>>
+                <button type="button" class="pw-btn" data-toggle-pw="e-pass2" aria-label="Show password"></button></div></div>
           </div>
           <?php if (!$g) echo google_button('employer', 'Sign up with Google', true); ?>
         </div>
