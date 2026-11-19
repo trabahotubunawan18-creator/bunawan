@@ -169,10 +169,12 @@ require __DIR__ . '/includes/header.php';
         <label for="r-pass">Password</label>
         <div class="pw"><input id="r-pass" name="password" type="password" autocomplete="new-password" minlength="8" required>
           <button type="button" class="pw-btn" data-toggle-pw="r-pass" aria-label="Show password"></button></div>
-        <div class="meter" aria-live="polite"><span id="meter-bar"></span></div><small id="meter-text" class="small">At least 8 characters with uppercase, lowercase, a number and a symbol.</small>
+        <div class="meter pw-meter" data-pw-meter="r-pass"><span></span></div>
+        <ul class="pw-rules" data-pw-rules="r-pass"></ul>
         <label for="r-pass2">Confirm password</label>
         <div class="pw"><input id="r-pass2" name="password2" type="password" autocomplete="new-password" required>
           <button type="button" class="pw-btn" data-toggle-pw="r-pass2" aria-label="Show password"></button></div>
+        <p class="pw-match" data-pw-match="r-pass2" data-pw-with="r-pass" hidden></p>
         <label class="check-row"><input type="checkbox" name="agree" value="1"> <span>I agree to the <a href="<?= url('terms.php') ?>">Terms</a> and <a href="<?= url('privacy.php') ?>">Privacy Policy</a>.</span></label>
         <button class="btn btn-primary block" type="submit">Create account</button>
         <?= google_button('register', 'Continue with Google', true) ?>
