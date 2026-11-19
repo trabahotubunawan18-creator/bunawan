@@ -4373,3 +4373,19 @@ html.tbb-lock,html.tbb-lock body{overflow:hidden}
 .pw-btn:hover,.reg-page .reg-form .pw-btn:hover{background:rgba(18,40,30,.08);color:var(--ink)}
 .pw-btn:focus-visible{outline:2px solid var(--green,#1f7a4d);outline-offset:1px}
 .pw-btn svg{display:block}
+
+/* ---- Password checklist, strength bar and match message ---- */
+.pw-meter{height:5px;margin-top:10px}
+.pw-meter span{transition:width .25s ease,background-color .25s ease}
+.pw-rules{list-style:none;margin:12px 0 4px;padding:0;display:grid;gap:7px}
+.pw-rules li{display:flex;align-items:center;gap:8px;font-size:13.5px;line-height:1.3;color:var(--muted);transition:color .15s}
+.pw-rules .ic{display:inline-flex;flex:none}
+.pw-rules .ic svg{display:block}
+.pw-rules .ic-ok{display:none}
+.pw-rules li.ok{color:var(--green)}
+.pw-rules li.ok .ic-off{display:none}
+.pw-rules li.ok .ic-ok{display:inline-flex}
+.pw-match{display:flex;align-items:center;gap:8px;margin:8px 0 4px;font-size:13.5px;font-weight:500;color:var(--green)}
+.pw-match[hidden]{display:none}
+.pw-match svg{display:block;flex:none}
+.pw-match.bad{color:var(--red-600)}
