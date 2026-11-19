@@ -105,18 +105,5 @@
     const i = b.closest('.up').querySelector('input[type=file]'); i.value = ''; paint(i);
   }));
 
-  // Password strength meter
-  const pw = document.getElementById('e-pass'), bar = document.getElementById('e-meter'), txt = document.getElementById('e-meter-text');
-  if (pw) pw.addEventListener('input', () => {
-    const v = pw.value; let s = 0;
-    if (v.length >= 8) s++;
-    if (/[A-Z]/.test(v) && /[a-z]/.test(v)) s++;
-    if (/\d/.test(v)) s++;
-    if (/[^A-Za-z0-9]/.test(v)) s++;
-    bar.style.width = (v ? (s + 1) * 20 : 0) + '%';
-    bar.style.background = ['#D64545', '#D64545', '#E89B0C', '#2FB463', '#1B7F45'][s];
-    txt.textContent = v ? ['Too weak', 'Weak', 'Fair', 'Good', 'Strong'][s] : 'At least 8 characters with uppercase, lowercase, a number and a symbol.';
-  });
-
   show(cur);
 })();
