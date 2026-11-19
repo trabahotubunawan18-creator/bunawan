@@ -49,9 +49,22 @@ function require_role(string $role): void {
 
 // ---------- Rate limiting (uses the rate_limits table) ----------
 function client_ip(): string {
-    // Apache's remoteip module (enabled in the Dockerfile) already puts the real visitor address in REMOTE_ADDR.
-    // Do not read X-Forwarded-For / CF-Connecting-IP here: visitors can fake those headers and bypass the login lockout.
-    return substr($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0', 0, 45);
+    $remote = substr($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0', 0, 45);
+    $isPublic = fn(string $ip): bool => filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false;
+    // Proxy headers are only trusted when the request reached Apache through Render's proxy,
+    // which shows up as a loopback or private address (::1, 10.x ...). A direct connection keeps its own address.
+    if ($isPublic($remote)) return $remote;
+    // Cloudflare sits in front of Render and overwrites this header, so visitors cannot forge it.
+    $cf = trim($_SERVER['HTTP_CF_CONNECTING_IP'] ?? '');
+    if ($cf !== '' && $isPublic($cf)) return substr($cf, 0, 45);
+    // Fallback for hosts without Cloudflare: the RIGHT-most public address was added by our own proxy.
+    // (The left-most one is written by the visitor and can be faked.)
+    if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        foreach (array_reverse(array_map('trim', explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']))) as $ip) {
+            if ($isPublic($ip)) return substr($ip, 0, 45);
+        }
+    }
+    return $remote;
 }
 function rate_count(string $action, int $minutes): int {
     $s = db()->prepare('SELECT COUNT(*) FROM rate_limits WHERE action = ? AND ip_address = ? AND created_at > (NOW() - make_interval(mins => CAST(? AS integer)))');
