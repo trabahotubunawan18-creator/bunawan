@@ -144,7 +144,7 @@ require __DIR__ . '/includes/header.php';
         <input id="l-email" name="email" type="email" autocomplete="email" value="<?= e($email) ?>" required>
         <label for="l-pass">Password</label>
         <div class="pw"><input id="l-pass" name="password" type="password" autocomplete="current-password" required>
-          <button type="button" class="pw-btn" data-toggle-pw="l-pass">Show</button></div>
+          <button type="button" class="pw-btn" data-toggle-pw="l-pass" aria-label="Show password"></button></div>
         <p class="small"><a href="<?= url('forgot-password.php') ?>">Forgot your password?</a></p>
         <?php $resendTo = $showResend ? $email : (string)($_SESSION['resend_email'] ?? ''); ?>
         <?php if ($showResend || $resendTo !== ''): ?><p class="small">Did not get the verification email? <a href="<?= url('resend-verification.php' . ($resendTo !== '' ? '?email=' . urlencode($resendTo) : '')) ?>">Resend it</a></p><?php endif; ?>
@@ -168,10 +168,11 @@ require __DIR__ . '/includes/header.php';
         <input id="r-phone" name="phone" type="tel" inputmode="numeric" placeholder="09123456789" value="<?= e($old['phone']) ?>" required>
         <label for="r-pass">Password</label>
         <div class="pw"><input id="r-pass" name="password" type="password" autocomplete="new-password" minlength="8" required>
-          <button type="button" class="pw-btn" data-toggle-pw="r-pass">Show</button></div>
+          <button type="button" class="pw-btn" data-toggle-pw="r-pass" aria-label="Show password"></button></div>
         <div class="meter" aria-live="polite"><span id="meter-bar"></span></div><small id="meter-text" class="small">At least 8 characters with uppercase, lowercase, a number and a symbol.</small>
         <label for="r-pass2">Confirm password</label>
-        <input id="r-pass2" name="password2" type="password" autocomplete="new-password" required>
+        <div class="pw"><input id="r-pass2" name="password2" type="password" autocomplete="new-password" required>
+          <button type="button" class="pw-btn" data-toggle-pw="r-pass2" aria-label="Show password"></button></div>
         <label class="check-row"><input type="checkbox" name="agree" value="1"> <span>I agree to the <a href="<?= url('terms.php') ?>">Terms</a> and <a href="<?= url('privacy.php') ?>">Privacy Policy</a>.</span></label>
         <button class="btn btn-primary block" type="submit">Create account</button>
         <?= google_button('register', 'Continue with Google', true) ?>
