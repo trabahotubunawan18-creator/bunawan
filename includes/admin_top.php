@@ -43,6 +43,7 @@ $navItems = [
   <link rel="stylesheet" href="<?= url('assets/css/style.css') ?>?v=<?= $cssVer ?>">
 </head>
 <body class="app-page admin-page">
+<a class="skip" href="#main">Skip to content</a>
 <div class="app" id="app">
   <aside class="side" id="side">
     <a class="side-logo" href="<?= url('admin/index.php') ?>">
