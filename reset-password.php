@@ -79,10 +79,11 @@ require_once __DIR__ . '/includes/back_button.php';
         <?= csrf_field() ?><input type="hidden" name="token" value="<?= e($token) ?>">
         <label for="n-pass">New password</label>
         <div class="pw"><input id="n-pass" name="password" type="password" minlength="8" autocomplete="new-password" required autofocus>
-          <button type="button" class="pw-btn" data-toggle-pw="n-pass">Show</button></div>
+          <button type="button" class="pw-btn" data-toggle-pw="n-pass" aria-label="Show password"></button></div>
         <div class="meter" aria-live="polite"><span id="n-meter"></span></div><small class="small" id="n-meter-text">At least 8 characters with uppercase, lowercase, a number and a symbol.</small>
         <label for="n-pass2">Confirm new password</label>
-        <input id="n-pass2" name="password2" type="password" autocomplete="new-password" required>
+        <div class="pw"><input id="n-pass2" name="password2" type="password" autocomplete="new-password" required>
+          <button type="button" class="pw-btn" data-toggle-pw="n-pass2" aria-label="Show password"></button></div>
         <button class="btn btn-primary block" type="submit">Save new password</button>
       </form>
       <script>
