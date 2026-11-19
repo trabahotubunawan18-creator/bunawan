@@ -4367,3 +4367,9 @@ html.tbb-lock,html.tbb-lock body{overflow:hidden}
 .cp-dd-menu a:hover{text-decoration:none;background:var(--green-50);color:var(--forest)}
 .cp-dd-menu a.on{background:var(--green-50);color:var(--forest)}
 @media (max-width:640px){.cp-sep{display:none}.cp-dd,.cp-dd>summary{width:100%}}
+/* Eye button for password fields (replaces the old "Show / Hide" text) */
+.pw input,.reg-page .reg-form .pw input{display:block;padding-right:48px!important}
+.pw-btn,.reg-page .reg-form .pw-btn{top:50%;right:6px;transform:translateY(-50%);width:36px;height:34px;padding:0;display:inline-flex;align-items:center;justify-content:center;background:transparent;color:var(--ink-2,#4a5d52);border-radius:var(--r-sm)}
+.pw-btn:hover,.reg-page .reg-form .pw-btn:hover{background:rgba(18,40,30,.08);color:var(--ink)}
+.pw-btn:focus-visible{outline:2px solid var(--green,#1f7a4d);outline-offset:1px}
+.pw-btn svg{display:block}
