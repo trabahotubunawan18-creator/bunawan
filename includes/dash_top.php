@@ -36,6 +36,7 @@ $cssVer = filemtime(__DIR__ . '/../assets/css/style.css');
   <link rel="stylesheet" href="<?= url('assets/css/style.css') ?>?v=<?= $cssVer ?>">
 </head>
 <body class="app-page">
+<a class="skip" href="#main">Skip to content</a>
 <div class="app" id="app">
   <aside class="side" id="side">
     <a class="side-logo" href="<?= url('seeker/index.php') ?>" aria-label="Dashboard home">
