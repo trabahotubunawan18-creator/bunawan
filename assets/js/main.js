@@ -56,16 +56,16 @@ document.querySelectorAll('[data-toggle-pw]').forEach(btn => {
     { t: 'One number (0-9)',             ok: v => /\d/.test(v) },
     { t: 'One symbol (! @ # $ % & *)',   ok: v => /[^A-Za-z0-9]/.test(v) }
   ];
-  const svg = (inner) => '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + inner + '</svg>';
+  const svg = (inner) => '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + inner + '</svg>';
   const IC_OFF = svg('<circle cx="12" cy="12" r="9"/>');
-  const IC_OK  = svg('<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.6 2.6L16 9.6"/>');
+  const IC_OK  = '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M7.5 12.5l3 3 6-6.5" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const IC_BAD = svg('<circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/>');
 
   document.querySelectorAll('[data-pw-rules]').forEach(list => {
     const input = document.getElementById(list.dataset.pwRules);
     if (!input) return;
     const bar = document.querySelector('[data-pw-meter="' + input.id + '"] span');
-    list.innerHTML = RULES.map(r => '<li><span class="ic ic-off">' + IC_OFF + '</span><span class="ic ic-ok">' + IC_OK + '</span><span>' + r.t + '</span></li>').join('');
+    list.innerHTML = RULES.map(r => '<li><span class="pw-ic pw-ic-off">' + IC_OFF + '</span><span class="pw-ic pw-ic-ok">' + IC_OK + '</span><span>' + r.t + '</span></li>').join('');
     const items = list.querySelectorAll('li');
     const paint = () => {
       const v = input.value;
