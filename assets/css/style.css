@@ -4375,17 +4375,16 @@ html.tbb-lock,html.tbb-lock body{overflow:hidden}
 .pw-btn svg{display:block}
 
 /* ---- Password checklist, strength bar and match message ---- */
-.pw-meter{height:5px;margin-top:10px}
+.pw-meter{height:4px;margin-top:8px}
 .pw-meter span{transition:width .25s ease,background-color .25s ease}
-.pw-rules{list-style:none;margin:12px 0 4px;padding:0;display:grid;gap:7px}
-.pw-rules li{display:flex;align-items:center;gap:8px;font-size:13.5px;line-height:1.3;color:var(--muted);transition:color .15s}
+.pw-rules{list-style:none;margin:7px 0 2px;padding:0;display:grid;gap:2px}
+.pw-rules li{display:flex;align-items:center;gap:6px;font-size:12px;line-height:1.25;color:var(--muted);transition:color .15s}
 .pw-rules .ic{display:inline-flex;flex:none}
-.pw-rules .ic svg{display:block}
+.pw-rules .ic svg,.pw-match svg{display:block;flex:none;width:13px;height:13px}
 .pw-rules .ic-ok{display:none}
 .pw-rules li.ok{color:var(--green)}
 .pw-rules li.ok .ic-off{display:none}
 .pw-rules li.ok .ic-ok{display:inline-flex}
-.pw-match{display:flex;align-items:center;gap:8px;margin:8px 0 4px;font-size:13.5px;font-weight:500;color:var(--green)}
+.pw-match{display:flex;align-items:center;gap:6px;margin:5px 0 0;font-size:12px;line-height:1.25;font-weight:500;color:var(--green)}
 .pw-match[hidden]{display:none}
-.pw-match svg{display:block;flex:none}
 .pw-match.bad{color:var(--red-600)}
