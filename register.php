@@ -225,10 +225,12 @@ function val(array $v, string $k): string { return e($v[$k] ?? ''); }
             <div><label for="e-pass">Password</label>
               <div class="pw"><input id="e-pass" name="password" type="password" minlength="8" autocomplete="new-password"<?= $g ? ' disabled' : ' required' ?>>
                 <button type="button" class="pw-btn" data-toggle-pw="e-pass" aria-label="Show password"></button></div>
-              <div class="meter"><span id="e-meter"></span></div><small class="small" id="e-meter-text">At least 8 characters with uppercase, lowercase, a number and a symbol.</small></div>
+              <div class="meter pw-meter" data-pw-meter="e-pass"><span></span></div>
+              <ul class="pw-rules" data-pw-rules="e-pass"></ul></div>
             <div><label for="e-pass2">Confirm password</label>
               <div class="pw"><input id="e-pass2" name="password2" type="password" autocomplete="new-password"<?= $g ? ' disabled' : ' required' ?>>
-                <button type="button" class="pw-btn" data-toggle-pw="e-pass2" aria-label="Show password"></button></div></div>
+                <button type="button" class="pw-btn" data-toggle-pw="e-pass2" aria-label="Show password"></button></div>
+              <p class="pw-match" data-pw-match="e-pass2" data-pw-with="e-pass" hidden></p></div>
           </div>
           <?php if (!$g) echo google_button('employer', 'Sign up with Google', true); ?>
         </div>
