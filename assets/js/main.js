@@ -44,25 +44,59 @@ document.querySelectorAll('[data-toggle-pw]').forEach(btn => {
   });
 });
 
-// Password strength meter
-const rp = document.getElementById('r-pass');
-if (rp) {
-  const bar = document.getElementById('meter-bar');
-  const txt = document.getElementById('meter-text');
-  rp.addEventListener('input', () => {
-    const v = rp.value;
-    let s = 0;
-    if (v.length >= 8) s++;
-    if (/[A-Z]/.test(v) && /[a-z]/.test(v)) s++;
-    if (/\d/.test(v)) s++;
-    if (/[^A-Za-z0-9]/.test(v)) s++;
-    const labels = ['Too weak', 'Weak', 'Fair', 'Good', 'Strong'];
-    const colors = ['#D64545', '#D64545', '#E89B0C', '#2FB463', '#1B7F45'];
-    bar.style.width = (v ? (s + 1) * 20 : 0) + '%';
-    bar.style.background = colors[s];
-    txt.textContent = v ? labels[s] : 'At least 8 characters with uppercase, lowercase, a number and a symbol.';
+// Password checklist + strength bar + "passwords match" message.
+// Markup: <div class="meter pw-meter" data-pw-meter="PASS_ID"><span></span></div>
+//         <ul class="pw-rules" data-pw-rules="PASS_ID"></ul>
+//         <p class="pw-match" data-pw-match="CONFIRM_ID" data-pw-with="PASS_ID" hidden></p>
+(function () {
+  const RULES = [
+    { t: 'At least 8 characters',        ok: v => v.length >= 8 },
+    { t: 'One uppercase letter (A-Z)',   ok: v => /[A-Z]/.test(v) },
+    { t: 'One lowercase letter (a-z)',   ok: v => /[a-z]/.test(v) },
+    { t: 'One number (0-9)',             ok: v => /\d/.test(v) },
+    { t: 'One symbol (! @ # $ % & *)',   ok: v => /[^A-Za-z0-9]/.test(v) }
+  ];
+  const svg = (inner) => '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + inner + '</svg>';
+  const IC_OFF = svg('<circle cx="12" cy="12" r="9"/>');
+  const IC_OK  = svg('<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.6 2.6L16 9.6"/>');
+  const IC_BAD = svg('<circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/>');
+
+  document.querySelectorAll('[data-pw-rules]').forEach(list => {
+    const input = document.getElementById(list.dataset.pwRules);
+    if (!input) return;
+    const bar = document.querySelector('[data-pw-meter="' + input.id + '"] span');
+    list.innerHTML = RULES.map(r => '<li><span class="ic ic-off">' + IC_OFF + '</span><span class="ic ic-ok">' + IC_OK + '</span><span>' + r.t + '</span></li>').join('');
+    const items = list.querySelectorAll('li');
+    const paint = () => {
+      const v = input.value;
+      let met = 0;
+      RULES.forEach((r, i) => { const ok = r.ok(v); if (ok) met++; items[i].classList.toggle('ok', ok); });
+      if (bar) {
+        bar.style.width = (met / RULES.length * 100) + '%';
+        bar.style.background = met <= 2 ? '#D64545' : (met === 3 ? '#E89B0C' : '#1B7F45');
+      }
+    };
+    input.addEventListener('input', paint);
+    paint();
   });
-}
+
+  document.querySelectorAll('[data-pw-match]').forEach(msg => {
+    const conf = document.getElementById(msg.dataset.pwMatch);
+    const pass = document.getElementById(msg.dataset.pwWith);
+    if (!conf || !pass) return;
+    msg.setAttribute('aria-live', 'polite');
+    const paint = () => {
+      if (!conf.value) { msg.hidden = true; return; }
+      const same = conf.value === pass.value;
+      msg.hidden = false;
+      msg.classList.toggle('bad', !same);
+      msg.innerHTML = (same ? IC_OK : IC_BAD) + '<span>' + (same ? 'Passwords match' : 'Passwords do not match') + '</span>';
+    };
+    conf.addEventListener('input', paint);
+    pass.addEventListener('input', paint);
+    paint();
+  });
+})();
 
 // Clear the error message as soon as the person starts typing again
 document.querySelectorAll('.auth-card input').forEach(i =>
