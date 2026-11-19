@@ -11,7 +11,7 @@ RUN apt-get update \
 # Allow photo uploads up to 5 MB (PHP's default limit is only 2 MB)
 RUN printf 'upload_max_filesize=6M\npost_max_size=20M\n' > /usr/local/etc/php/conf.d/uploads.ini
 
-RUN a2enmod rewrite headers remoteip
+RUN a2enmod rewrite headers remoteip deflate expires
 
 # Render gives the site a port in the PORT variable (default 10000)
 ENV PORT=10000
@@ -21,6 +21,10 @@ RUN sed -i 's/Listen 80/Listen ${PORT}/' /etc/apache2/ports.conf \
 # Behind Render's proxy: use the visitor's real IP (for login/rate limits) and know the page is HTTPS
 RUN printf 'RemoteIPHeader X-Forwarded-For\nSetEnvIf X-Forwarded-Proto "https" HTTPS=on\n' > /etc/apache2/conf-available/proxy-fix.conf \
  && a2enconf proxy-fix
+
+# Security headers, compression and caching (see docker/security-headers.conf)
+COPY docker/security-headers.conf /etc/apache2/conf-available/security-headers.conf
+RUN a2enconf security-headers
 
 COPY . /var/www/html/
 
