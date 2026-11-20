@@ -24,11 +24,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     elseif (!csrf_check()) { $errors[] = 'Your session expired. Please try again.'; }
     else {
         foreach (['full_name', 'phone', 'barangay', 'birth_date', 'education', 'work_experience'] as $k) $v[$k] = trim((string)($_POST[$k] ?? ''));
-        $v['phone'] = preg_replace('/[\s-]/', '', $v['phone']);
+        $v['phone'] = norm_mobile($v['phone']);
         $v['avail'] = array_values(array_intersect(array_keys($opts), (array)($_POST['avail'] ?? [])));
 
         if (mb_strlen($v['full_name']) < 2 || mb_strlen($v['full_name']) > 100) $errors[] = 'Enter your full name.';
-        if (!preg_match('/^(09|\+639)\d{9}$/', $v['phone'])) $errors[] = 'Enter a valid mobile number, like 09123456789.';
+        if (!is_mobile($v['phone'])) $errors[] = 'Enter an 11-digit mobile number, like 09123456789.';
         $bid = null;
         if ($v['barangay'] !== '') {
             foreach ($barangays as $b) if ((string)$b['id'] === $v['barangay']) $bid = (int)$b['id'];
@@ -115,7 +115,7 @@ require __DIR__ . '/../includes/dash_top.php';
     </div>
     <div class="prf-grid">
       <div><label for="p-name">Full name</label><input id="p-name" name="full_name" maxlength="100" value="<?= e($v['full_name']) ?>" required></div>
-      <div><label for="p-phone">Mobile number</label><input id="p-phone" name="phone" type="tel" placeholder="09123456789" value="<?= e($v['phone']) ?>" required></div>
+      <div><label for="p-phone">Mobile number</label><input id="p-phone" name="phone" type="tel" inputmode="numeric" maxlength="11" pattern="09[0-9]{9}" title="11-digit mobile number, like 09123456789" oninput="var v=this.value.replace(/\D/g,'');if(v.slice(0,2)==='63')v='0'+v.slice(2);this.value=v.slice(0,11)" placeholder="09123456789" value="<?= e(norm_mobile($v['phone'])) ?>" required></div>
       <div><label for="p-brgy">Barangay</label>
         <select id="p-brgy" name="barangay"><option value="">Choose barangay</option>
           <?php foreach ($barangays as $b): ?><option value="<?= (int)$b['id'] ?>" <?= $v['barangay'] === (string)$b['id'] ? 'selected' : '' ?>><?= e($b['name']) ?></option><?php endforeach; ?>
