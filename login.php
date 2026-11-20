@@ -165,7 +165,7 @@ require __DIR__ . '/includes/header.php';
         <label for="r-email">Email</label>
         <input id="r-email" name="email" type="email" autocomplete="email" value="<?= e($old['email']) ?>" required>
         <label for="r-phone">Mobile number</label>
-        <input id="r-phone" name="phone" type="tel" inputmode="numeric" maxlength="11" pattern="09[0-9]{9}" title="11-digit mobile number, like 09123456789" oninput="var v=this.value.replace(/\D/g,'');if(v.slice(0,2)==='63')v='0'+v.slice(2);this.value=v.slice(0,11)" placeholder="09123456789" value="<?= e($old['phone']) ?>" required>
+        <input id="r-phone" name="phone" type="tel" inputmode="numeric" pattern="09[0-9]{9}" title="Enter an 11-digit mobile number, like 09123456789" oninput="var v=this.value.replace(/\D/g,'');if(v.length===12&&v.slice(0,3)==='639')v='0'+v.slice(2);this.value=v;this.setCustomValidity(v.length===11&&v.slice(0,2)==='09'?'':'Mobile number must be exactly 11 digits, like 09123456789.');if(v.length>11)this.reportValidity()" placeholder="09123456789" value="<?= e($old['phone']) ?>" required>
         <label for="r-pass">Password</label>
         <div class="pw"><input id="r-pass" name="password" type="password" autocomplete="new-password" minlength="8" required>
           <button type="button" class="pw-btn" data-toggle-pw="r-pass" aria-label="Show password"></button></div>
