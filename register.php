@@ -278,7 +278,7 @@ function val(array $v, string $k): string { return e($v[$k] ?? ''); }
             <div><label for="e-pos">Position <span class="opt">(optional)</span></label>
               <input id="e-pos" name="contact_position" maxlength="80" value="<?= val($v, 'contact_position') ?>" placeholder="Owner, manager, HR"></div>
             <div><label for="e-phone">Mobile number</label>
-              <input id="e-phone" name="contact_phone" type="tel" inputmode="numeric" maxlength="11" pattern="09[0-9]{9}" title="11-digit mobile number, like 09123456789" oninput="var v=this.value.replace(/\D/g,'');if(v.slice(0,2)==='63')v='0'+v.slice(2);this.value=v.slice(0,11)" placeholder="09123456789" value="<?= val($v, 'contact_phone') ?>" required></div>
+              <input id="e-phone" name="contact_phone" type="tel" inputmode="numeric" pattern="09[0-9]{9}" title="Enter an 11-digit mobile number, like 09123456789" oninput="var v=this.value.replace(/\D/g,'');if(v.length===12&&v.slice(0,3)==='639')v='0'+v.slice(2);this.value=v;this.setCustomValidity(v.length===11&&v.slice(0,2)==='09'?'':'Mobile number must be exactly 11 digits, like 09123456789.');if(v.length>11)this.reportValidity()" placeholder="09123456789" value="<?= val($v, 'contact_phone') ?>" required></div>
           </div>
           <p class="step-note">Our admin will call this number as part of verification. Job seekers you shortlist or accept will also see this number and your contact name, so they can reach you.</p>
         </div>
@@ -380,7 +380,7 @@ function val(array $v, string $k): string { return e($v[$k] ?? ''); }
               <label for="r<?= $n ?>n">Full name</label>
               <input id="r<?= $n ?>n" name="ref<?= $n ?>_name" maxlength="120" value="<?= val($v, "ref{$n}_name") ?>" required>
               <label for="r<?= $n ?>p">Phone number</label>
-              <input id="r<?= $n ?>p" name="ref<?= $n ?>_phone" type="tel" inputmode="numeric" maxlength="11" pattern="09[0-9]{9}" title="11-digit mobile number, like 09123456789" oninput="var v=this.value.replace(/\D/g,'');if(v.slice(0,2)==='63')v='0'+v.slice(2);this.value=v.slice(0,11)" placeholder="09123456789" value="<?= val($v, "ref{$n}_phone") ?>" required>
+              <input id="r<?= $n ?>p" name="ref<?= $n ?>_phone" type="tel" inputmode="numeric" pattern="09[0-9]{9}" title="Enter an 11-digit mobile number, like 09123456789" oninput="var v=this.value.replace(/\D/g,'');if(v.length===12&&v.slice(0,3)==='639')v='0'+v.slice(2);this.value=v;this.setCustomValidity(v.length===11&&v.slice(0,2)==='09'?'':'Mobile number must be exactly 11 digits, like 09123456789.');if(v.length>11)this.reportValidity()" placeholder="09123456789" value="<?= val($v, "ref{$n}_phone") ?>" required>
               <label for="r<?= $n ?>r">How do they know you?</label>
               <input id="r<?= $n ?>r" name="ref<?= $n ?>_rel" maxlength="80" value="<?= val($v, "ref{$n}_rel") ?>" placeholder="Example: Kagawad, supplier" required>
             </fieldset>
