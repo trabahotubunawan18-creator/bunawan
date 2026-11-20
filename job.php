@@ -71,10 +71,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors[] = 'Only job seeker accounts can apply for jobs.';
         } else {
             $form['name'] = trim($_POST['name'] ?? '');
-            $form['phone'] = preg_replace('/[\s-]/', '', $_POST['phone'] ?? '');
+            $form['phone'] = norm_mobile($_POST['phone'] ?? '');
             $form['message'] = trim($_POST['message'] ?? '');
             if (mb_strlen($form['name']) < 2 || mb_strlen($form['name']) > 100) $errors[] = 'Enter your full name.';
-            if (!preg_match('/^(09|\+639)\d{9}$/', $form['phone'])) $errors[] = 'Enter a valid mobile number, like 09123456789.';
+            if (!is_mobile($form['phone'])) $errors[] = 'Enter an 11-digit mobile number, like 09123456789.';
             if (mb_strlen($form['message']) > 1000) $errors[] = 'Your message is too long (maximum 1000 characters).';
             if ($applied) $errors[] = 'You have already applied for this job.';
             $selSkills = skills_from_post($pdo, $errors, SKILL_MAX_SEEKER);
@@ -298,7 +298,7 @@ require __DIR__ . '/includes/' . ($inDash ? 'dash_top.php' : 'header.php');
               <label for="a-name">Full name</label>
               <input id="a-name" name="name" maxlength="100" value="<?= e($form['name']) ?>" required>
               <label for="a-phone">Mobile number</label>
-              <input id="a-phone" name="phone" type="tel" placeholder="09123456789" value="<?= e($form['phone']) ?>" required>
+              <input id="a-phone" name="phone" type="tel" inputmode="numeric" maxlength="11" pattern="09[0-9]{9}" title="11-digit mobile number, like 09123456789" oninput="var v=this.value.replace(/\D/g,'');if(v.slice(0,2)==='63')v='0'+v.slice(2);this.value=v.slice(0,11)" placeholder="09123456789" value="<?= e(norm_mobile($form['phone'])) ?>" required>
               <label for="a-msg">Message to the employer (optional)</label>
               <textarea id="a-msg" name="message" rows="3" maxlength="1000" placeholder="Tell the employer why you are a good fit."><?= e($form['message']) ?></textarea>
               <label id="a-skills-lbl">Your skills for this job</label>
