@@ -115,7 +115,7 @@ require __DIR__ . '/../includes/dash_top.php';
     </div>
     <div class="prf-grid">
       <div><label for="p-name">Full name</label><input id="p-name" name="full_name" maxlength="100" value="<?= e($v['full_name']) ?>" required></div>
-      <div><label for="p-phone">Mobile number</label><input id="p-phone" name="phone" type="tel" inputmode="numeric" maxlength="11" pattern="09[0-9]{9}" title="11-digit mobile number, like 09123456789" oninput="var v=this.value.replace(/\D/g,'');if(v.slice(0,2)==='63')v='0'+v.slice(2);this.value=v.slice(0,11)" placeholder="09123456789" value="<?= e(norm_mobile($v['phone'])) ?>" required></div>
+      <div><label for="p-phone">Mobile number</label><input id="p-phone" name="phone" type="tel" inputmode="numeric" pattern="09[0-9]{9}" title="Enter an 11-digit mobile number, like 09123456789" oninput="var v=this.value.replace(/\D/g,'');if(v.length===12&&v.slice(0,3)==='639')v='0'+v.slice(2);this.value=v;this.setCustomValidity(v.length===11&&v.slice(0,2)==='09'?'':'Mobile number must be exactly 11 digits, like 09123456789.');if(v.length>11)this.reportValidity()" placeholder="09123456789" value="<?= e(norm_mobile($v['phone'])) ?>" required></div>
       <div><label for="p-brgy">Barangay</label>
         <select id="p-brgy" name="barangay"><option value="">Choose barangay</option>
           <?php foreach ($barangays as $b): ?><option value="<?= (int)$b['id'] ?>" <?= $v['barangay'] === (string)$b['id'] ? 'selected' : '' ?>><?= e($b['name']) ?></option><?php endforeach; ?>
