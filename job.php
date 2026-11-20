@@ -298,7 +298,7 @@ require __DIR__ . '/includes/' . ($inDash ? 'dash_top.php' : 'header.php');
               <label for="a-name">Full name</label>
               <input id="a-name" name="name" maxlength="100" value="<?= e($form['name']) ?>" required>
               <label for="a-phone">Mobile number</label>
-              <input id="a-phone" name="phone" type="tel" inputmode="numeric" maxlength="11" pattern="09[0-9]{9}" title="11-digit mobile number, like 09123456789" oninput="var v=this.value.replace(/\D/g,'');if(v.slice(0,2)==='63')v='0'+v.slice(2);this.value=v.slice(0,11)" placeholder="09123456789" value="<?= e(norm_mobile($form['phone'])) ?>" required>
+              <input id="a-phone" name="phone" type="tel" inputmode="numeric" pattern="09[0-9]{9}" title="Enter an 11-digit mobile number, like 09123456789" oninput="var v=this.value.replace(/\D/g,'');if(v.length===12&&v.slice(0,3)==='639')v='0'+v.slice(2);this.value=v;this.setCustomValidity(v.length===11&&v.slice(0,2)==='09'?'':'Mobile number must be exactly 11 digits, like 09123456789.');if(v.length>11)this.reportValidity()" placeholder="09123456789" value="<?= e(norm_mobile($form['phone'])) ?>" required>
               <label for="a-msg">Message to the employer (optional)</label>
               <textarea id="a-msg" name="message" rows="3" maxlength="1000" placeholder="Tell the employer why you are a good fit."><?= e($form['message']) ?></textarea>
               <label id="a-skills-lbl">Your skills for this job</label>
