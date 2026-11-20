@@ -37,9 +37,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $canResubmit) {
             elseif ($d < new DateTime('today')) $errors[] = 'Your permit has expired. Please renew it first.';
         }
         foreach ([0, 1] as $i) {
-            $v['r' . $i . 'p'] = preg_replace('/[\s\-()]/', '', $v['r' . $i . 'p']);
+            $v['r' . $i . 'p'] = norm_mobile($v['r' . $i . 'p']);
             if (mb_strlen($v['r' . $i . 'n']) < 2 || mb_strlen($v['r' . $i . 'n']) > 120) $errors[] = 'Enter the name of reference ' . ($i + 1) . '.';
-            if (!preg_match('/^\+?\d{7,13}$/', $v['r' . $i . 'p'])) $errors[] = 'Enter a valid phone number for reference ' . ($i + 1) . '.';
+            if (!is_mobile($v['r' . $i . 'p'])) $errors[] = 'Enter an 11-digit mobile number for reference ' . ($i + 1) . ', like 09123456789.';
             if (mb_strlen($v['r' . $i . 'r']) < 2 || mb_strlen($v['r' . $i . 'r']) > 80) $errors[] = 'Tell us how reference ' . ($i + 1) . ' knows you.';
         }
         if ($v['r0p'] !== '' && $v['r0p'] === $v['r1p']) $errors[] = 'Please give two different references.';
@@ -171,7 +171,7 @@ require __DIR__ . '/../includes/emp_top.php';
     <fieldset class="refset"><legend>Reference <?= $i + 1 ?></legend>
       <div class="row2">
         <div><label for="v-r<?= $i ?>n">Full name</label><input id="v-r<?= $i ?>n" name="r<?= $i ?>n" maxlength="120" value="<?= e($v['r' . $i . 'n']) ?>" required></div>
-        <div><label for="v-r<?= $i ?>p">Phone number</label><input id="v-r<?= $i ?>p" name="r<?= $i ?>p" type="tel" value="<?= e($v['r' . $i . 'p']) ?>" required></div>
+        <div><label for="v-r<?= $i ?>p">Phone number</label><input id="v-r<?= $i ?>p" name="r<?= $i ?>p" type="tel" inputmode="numeric" maxlength="11" pattern="09[0-9]{9}" title="11-digit mobile number, like 09123456789" oninput="var v=this.value.replace(/\D/g,'');if(v.slice(0,2)==='63')v='0'+v.slice(2);this.value=v.slice(0,11)" placeholder="09123456789" value="<?= e(norm_mobile($v['r' . $i . 'p'])) ?>" required></div>
       </div>
       <label for="v-r<?= $i ?>r">How do they know you?</label><input id="v-r<?= $i ?>r" name="r<?= $i ?>r" maxlength="80" value="<?= e($v['r' . $i . 'r']) ?>" required>
     </fieldset>
