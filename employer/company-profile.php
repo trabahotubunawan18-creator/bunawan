@@ -111,7 +111,7 @@ require __DIR__ . '/../includes/emp_top.php';
     <div><label for="c-pos">Position (optional)</label><input id="c-pos" name="contact_position" maxlength="80" value="<?= e($v['contact_position']) ?>"></div>
   </div>
   <div class="row2">
-    <div><label for="c-ph">Contact mobile number</label><input id="c-ph" name="contact_phone" type="tel" inputmode="numeric" maxlength="11" pattern="09[0-9]{9}" title="11-digit mobile number, like 09123456789" oninput="var v=this.value.replace(/\D/g,'');if(v.slice(0,2)==='63')v='0'+v.slice(2);this.value=v.slice(0,11)" value="<?= e(norm_mobile($v['contact_phone'])) ?>" required></div>
+    <div><label for="c-ph">Contact mobile number</label><input id="c-ph" name="contact_phone" type="tel" inputmode="numeric" pattern="09[0-9]{9}" title="Enter an 11-digit mobile number, like 09123456789" oninput="var v=this.value.replace(/\D/g,'');if(v.length===12&&v.slice(0,3)==='639')v='0'+v.slice(2);this.value=v;this.setCustomValidity(v.length===11&&v.slice(0,2)==='09'?'':'Mobile number must be exactly 11 digits, like 09123456789.');if(v.length>11)this.reportValidity()" value="<?= e(norm_mobile($v['contact_phone'])) ?>" required></div>
     <div><label for="c-fb">Facebook page (optional)</label><input id="c-fb" name="facebook" maxlength="255" value="<?= e($v['facebook']) ?>"></div>
   </div>
   </div>
