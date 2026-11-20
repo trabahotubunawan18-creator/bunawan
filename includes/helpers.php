@@ -640,3 +640,16 @@ function applicant_reports_ready(PDO $pdo): bool {
     if ($ok === null) { try { $pdo->query('SELECT 1 FROM applicant_reports LIMIT 1'); $ok = true; } catch (PDOException $e) { $ok = false; } }
     return $ok;
 }
+
+// ---- Mobile numbers: always stored as 11 digits, 09XXXXXXXXX ----
+// Strips spaces, dashes, brackets and "+", and turns a +63 / 63 number into the 09 form.
+if (!function_exists('norm_mobile')) {
+    function norm_mobile($p): string {
+        $d = preg_replace('/\D/', '', (string)$p);
+        if (strlen($d) === 12 && strncmp($d, '639', 3) === 0) $d = '0' . substr($d, 2);
+        return $d;
+    }
+}
+if (!function_exists('is_mobile')) {
+    function is_mobile(string $p): bool { return (bool)preg_match('/^09\d{9}$/', $p); }
+}
