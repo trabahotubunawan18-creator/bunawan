@@ -86,7 +86,7 @@ require __DIR__ . '/../includes/emp_top.php';
       </div>
       <div class="row2">
         <div><label for="s-name">Full name</label><input id="s-name" name="full_name" maxlength="100" value="<?= e($me['full_name']) ?>" required></div>
-        <div><label for="s-phone">Mobile number</label><input id="s-phone" name="phone" type="tel" inputmode="numeric" maxlength="11" pattern="09[0-9]{9}" title="11-digit mobile number, like 09123456789" oninput="var v=this.value.replace(/\D/g,'');if(v.slice(0,2)==='63')v='0'+v.slice(2);this.value=v.slice(0,11)" value="<?= e(norm_mobile($_POST['phone'] ?? $me['phone'])) ?>" placeholder="09123456789" required></div>
+        <div><label for="s-phone">Mobile number</label><input id="s-phone" name="phone" type="tel" inputmode="numeric" pattern="09[0-9]{9}" title="Enter an 11-digit mobile number, like 09123456789" oninput="var v=this.value.replace(/\D/g,'');if(v.length===12&&v.slice(0,3)==='639')v='0'+v.slice(2);this.value=v;this.setCustomValidity(v.length===11&&v.slice(0,2)==='09'?'':'Mobile number must be exactly 11 digits, like 09123456789.');if(v.length>11)this.reportValidity()" value="<?= e(norm_mobile($_POST['phone'] ?? $me['phone'])) ?>" placeholder="09123456789" required></div>
       </div>
       <div class="set-confirm">
         <div><label for="s-cur0">Current password</label><input id="s-cur0" name="current" type="password" autocomplete="current-password" placeholder="To confirm it is you" required></div>
