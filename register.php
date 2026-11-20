@@ -41,8 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($g) $v['email'] = $g['email'];   // never trust the form for a Google email
         $pass  = $_POST['password'] ?? '';
         $pass2 = $_POST['password2'] ?? '';
-        $normPhone = fn($p) => preg_replace('/[\s\-()]/', '', $p);
-        $mobile = '/^(09|\+639)\d{9}$/';
+        $normPhone = fn($p) => norm_mobile($p);
+        $mobile = '/^09\d{9}$/';
         $idfmt  = '/^[A-Za-z0-9\-\/\. ]{3,60}$/u';
 
         // Step 1: account
@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (mb_strlen($v['contact_person']) < 2 || mb_strlen($v['contact_person']) > 120) $add(3, 'Enter the contact person\'s name.');
         if (mb_strlen($v['contact_position']) > 80) $add(3, 'The position is too long.');
         $v['contact_phone'] = $normPhone($v['contact_phone']);
-        if (!preg_match($mobile, $v['contact_phone'])) $add(3, 'Enter a valid contact mobile number, like 09123456789.');
+        if (!preg_match($mobile, $v['contact_phone'])) $add(3, 'Enter an 11-digit mobile number, like 09123456789.');
         if ($v['facebook'] !== '') {
             if (!preg_match('#^https?://#i', $v['facebook'])) $v['facebook'] = 'https://' . $v['facebook'];
             $host = strtolower((string)parse_url($v['facebook'], PHP_URL_HOST));
@@ -92,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         foreach ([1, 2] as $n) {
             $v["ref{$n}_phone"] = $normPhone($v["ref{$n}_phone"]);
             if (mb_strlen($v["ref{$n}_name"]) < 2 || mb_strlen($v["ref{$n}_name"]) > 120) $add(5, "Enter the name of reference $n.");
-            if (!preg_match('/^\+?\d{7,13}$/', $v["ref{$n}_phone"])) $add(5, "Enter a valid phone number for reference $n.");
+            if (!preg_match($mobile, $v["ref{$n}_phone"])) $add(5, "Enter an 11-digit mobile number for reference $n, like 09123456789.");
             if (mb_strlen($v["ref{$n}_rel"]) < 2 || mb_strlen($v["ref{$n}_rel"]) > 80) $add(5, "Tell us how reference $n knows you (for example barangay official, supplier).");
         }
         if ($v['ref1_phone'] !== '' && $v['ref1_phone'] === $v['ref2_phone']) $add(5, 'Please give two different references.');
@@ -278,7 +278,7 @@ function val(array $v, string $k): string { return e($v[$k] ?? ''); }
             <div><label for="e-pos">Position <span class="opt">(optional)</span></label>
               <input id="e-pos" name="contact_position" maxlength="80" value="<?= val($v, 'contact_position') ?>" placeholder="Owner, manager, HR"></div>
             <div><label for="e-phone">Mobile number</label>
-              <input id="e-phone" name="contact_phone" type="tel" inputmode="numeric" placeholder="09123456789" value="<?= val($v, 'contact_phone') ?>" required></div>
+              <input id="e-phone" name="contact_phone" type="tel" inputmode="numeric" maxlength="11" pattern="09[0-9]{9}" title="11-digit mobile number, like 09123456789" oninput="var v=this.value.replace(/\D/g,'');if(v.slice(0,2)==='63')v='0'+v.slice(2);this.value=v.slice(0,11)" placeholder="09123456789" value="<?= val($v, 'contact_phone') ?>" required></div>
           </div>
           <p class="step-note">Our admin will call this number as part of verification. Job seekers you shortlist or accept will also see this number and your contact name, so they can reach you.</p>
         </div>
@@ -380,7 +380,7 @@ function val(array $v, string $k): string { return e($v[$k] ?? ''); }
               <label for="r<?= $n ?>n">Full name</label>
               <input id="r<?= $n ?>n" name="ref<?= $n ?>_name" maxlength="120" value="<?= val($v, "ref{$n}_name") ?>" required>
               <label for="r<?= $n ?>p">Phone number</label>
-              <input id="r<?= $n ?>p" name="ref<?= $n ?>_phone" type="tel" value="<?= val($v, "ref{$n}_phone") ?>" required>
+              <input id="r<?= $n ?>p" name="ref<?= $n ?>_phone" type="tel" inputmode="numeric" maxlength="11" pattern="09[0-9]{9}" title="11-digit mobile number, like 09123456789" oninput="var v=this.value.replace(/\D/g,'');if(v.slice(0,2)==='63')v='0'+v.slice(2);this.value=v.slice(0,11)" placeholder="09123456789" value="<?= val($v, "ref{$n}_phone") ?>" required>
               <label for="r<?= $n ?>r">How do they know you?</label>
               <input id="r<?= $n ?>r" name="ref<?= $n ?>_rel" maxlength="80" value="<?= val($v, "ref{$n}_rel") ?>" placeholder="Example: Kagawad, supplier" required>
             </fieldset>
