@@ -66,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $tab = 'register';
         $old['name']  = trim($_POST['name'] ?? '');
         $old['email'] = strtolower(trim($_POST['email'] ?? ''));
-        $old['phone'] = preg_replace('/[\s-]/', '', $_POST['phone'] ?? '');
+        $old['phone'] = norm_mobile($_POST['phone'] ?? '');
         $pass = $_POST['password'] ?? '';
         $pass2 = $_POST['password2'] ?? '';
 
@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             if (mb_strlen($old['name']) < 2 || mb_strlen($old['name']) > 100) $errors[] = 'Enter your full name (2 to 100 characters).';
             if (!filter_var($old['email'], FILTER_VALIDATE_EMAIL) || strlen($old['email']) > 190) $errors[] = 'Enter a valid email address.';
-            if (!preg_match('/^(09|\+639)\d{9}$/', $old['phone'])) $errors[] = 'Enter a valid Philippine mobile number, like 09123456789.';
+            if (!is_mobile($old['phone'])) $errors[] = 'Enter an 11-digit mobile number, like 09123456789.';
             if ($pw_err = password_problem($pass)) $errors[] = $pw_err;
             if ($pass !== $pass2) $errors[] = 'The two passwords do not match.';
             if (empty($_POST['agree'])) $errors[] = 'Please accept the Terms and Privacy Policy to continue.';
@@ -165,7 +165,7 @@ require __DIR__ . '/includes/header.php';
         <label for="r-email">Email</label>
         <input id="r-email" name="email" type="email" autocomplete="email" value="<?= e($old['email']) ?>" required>
         <label for="r-phone">Mobile number</label>
-        <input id="r-phone" name="phone" type="tel" inputmode="numeric" placeholder="09123456789" value="<?= e($old['phone']) ?>" required>
+        <input id="r-phone" name="phone" type="tel" inputmode="numeric" maxlength="11" pattern="09[0-9]{9}" title="11-digit mobile number, like 09123456789" oninput="var v=this.value.replace(/\D/g,'');if(v.slice(0,2)==='63')v='0'+v.slice(2);this.value=v.slice(0,11)" placeholder="09123456789" value="<?= e($old['phone']) ?>" required>
         <label for="r-pass">Password</label>
         <div class="pw"><input id="r-pass" name="password" type="password" autocomplete="new-password" minlength="8" required>
           <button type="button" class="pw-btn" data-toggle-pw="r-pass" aria-label="Show password"></button></div>
