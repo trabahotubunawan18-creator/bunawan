@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     else {
         foreach ($v as $k => $_) if (isset($_POST[$k])) $v[$k] = trim((string)$_POST[$k]);
         if ($locked) { $v['employer_name'] = $p['employer_name']; $v['barangay'] = (string)$p['barangay_id']; $v['address'] = $p['full_address']; }
-        $v['contact_phone'] = preg_replace('/[\s\-()]/', '', $v['contact_phone']);
+        $v['contact_phone'] = norm_mobile($v['contact_phone']);
 
         if (mb_strlen($v['employer_name']) < 2 || mb_strlen($v['employer_name']) > 150) $errors[] = 'Enter your employer name.';
         if (mb_strlen($v['description']) > 500) $errors[] = 'The description is too long (maximum 500 characters).';
@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (mb_strlen($v['landmark']) > 150) $errors[] = 'The landmark is too long.';
         if (mb_strlen($v['contact_person']) < 2 || mb_strlen($v['contact_person']) > 120) $errors[] = 'Enter the contact person\'s name.';
         if (mb_strlen($v['contact_position']) > 80) $errors[] = 'The position is too long.';
-        if (!preg_match('/^(09|\+639)\d{9}$/', $v['contact_phone'])) $errors[] = 'Enter a valid contact mobile number.';
+        if (!is_mobile($v['contact_phone'])) $errors[] = 'Enter an 11-digit mobile number, like 09123456789.';
         if ($v['facebook'] !== '') {
             if (!preg_match('#^https?://#i', $v['facebook'])) $v['facebook'] = 'https://' . $v['facebook'];
             $host = strtolower((string)parse_url($v['facebook'], PHP_URL_HOST));
@@ -111,7 +111,7 @@ require __DIR__ . '/../includes/emp_top.php';
     <div><label for="c-pos">Position (optional)</label><input id="c-pos" name="contact_position" maxlength="80" value="<?= e($v['contact_position']) ?>"></div>
   </div>
   <div class="row2">
-    <div><label for="c-ph">Contact mobile number</label><input id="c-ph" name="contact_phone" type="tel" value="<?= e($v['contact_phone']) ?>" required></div>
+    <div><label for="c-ph">Contact mobile number</label><input id="c-ph" name="contact_phone" type="tel" inputmode="numeric" maxlength="11" pattern="09[0-9]{9}" title="11-digit mobile number, like 09123456789" oninput="var v=this.value.replace(/\D/g,'');if(v.slice(0,2)==='63')v='0'+v.slice(2);this.value=v.slice(0,11)" value="<?= e(norm_mobile($v['contact_phone'])) ?>" required></div>
     <div><label for="c-fb">Facebook page (optional)</label><input id="c-fb" name="facebook" maxlength="255" value="<?= e($v['facebook']) ?>"></div>
   </div>
   </div>
