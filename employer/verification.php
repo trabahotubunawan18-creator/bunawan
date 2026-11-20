@@ -171,7 +171,7 @@ require __DIR__ . '/../includes/emp_top.php';
     <fieldset class="refset"><legend>Reference <?= $i + 1 ?></legend>
       <div class="row2">
         <div><label for="v-r<?= $i ?>n">Full name</label><input id="v-r<?= $i ?>n" name="r<?= $i ?>n" maxlength="120" value="<?= e($v['r' . $i . 'n']) ?>" required></div>
-        <div><label for="v-r<?= $i ?>p">Phone number</label><input id="v-r<?= $i ?>p" name="r<?= $i ?>p" type="tel" inputmode="numeric" maxlength="11" pattern="09[0-9]{9}" title="11-digit mobile number, like 09123456789" oninput="var v=this.value.replace(/\D/g,'');if(v.slice(0,2)==='63')v='0'+v.slice(2);this.value=v.slice(0,11)" placeholder="09123456789" value="<?= e(norm_mobile($v['r' . $i . 'p'])) ?>" required></div>
+        <div><label for="v-r<?= $i ?>p">Phone number</label><input id="v-r<?= $i ?>p" name="r<?= $i ?>p" type="tel" inputmode="numeric" pattern="09[0-9]{9}" title="Enter an 11-digit mobile number, like 09123456789" oninput="var v=this.value.replace(/\D/g,'');if(v.length===12&&v.slice(0,3)==='639')v='0'+v.slice(2);this.value=v;this.setCustomValidity(v.length===11&&v.slice(0,2)==='09'?'':'Mobile number must be exactly 11 digits, like 09123456789.');if(v.length>11)this.reportValidity()" placeholder="09123456789" value="<?= e(norm_mobile($v['r' . $i . 'p'])) ?>" required></div>
       </div>
       <label for="v-r<?= $i ?>r">How do they know you?</label><input id="v-r<?= $i ?>r" name="r<?= $i ?>r" maxlength="80" value="<?= e($v['r' . $i . 'r']) ?>" required>
     </fieldset>
