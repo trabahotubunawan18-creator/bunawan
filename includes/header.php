@@ -41,7 +41,7 @@ $announcement = setting('announcement');
       <?= nav_link('contact.php', 'Contact') ?>
       <?php if (is_logged_in()): ?>
         <a href="<?= url(dashboard_url($_SESSION['role'])) ?>">My Dashboard</a>
-        <form method="post" action="<?= url('logout.php') ?>" class="inline"><?= csrf_field() ?><button class="linkbtn" type="submit">Log out</button></form>
+        <form method="post" action="<?= url('logout.php') ?>" data-confirm="Are you sure you want to log out?" data-confirm-title="Log out?" data-confirm-ok="Log out" data-confirm-cancel="Stay logged in" data-confirm-tone="info" class="inline"><?= csrf_field() ?><button class="linkbtn" type="submit">Log out</button></form>
       <?php else: ?>
         <a href="<?= url('login.php') ?>">Login</a>
         <a class="btn btn-gold btn-sm" href="<?= url(post_job_url()) ?>">Post a Job</a>
