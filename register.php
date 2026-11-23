@@ -203,7 +203,7 @@ function val(array $v, string $k): string { return e($v[$k] ?? ''); }
         <?php if (!empty($_FILES)): ?><p class="small" style="margin:8px 0 0">For security, please choose your files again.</p><?php endif; ?></div>
       <?php endif; ?>
 
-      <form id="wiz" class="form reg-form" method="post" enctype="multipart/form-data" data-start="<?= (int)$startStep ?>"<?= $g ? ' data-google="1"' : '' ?> novalidate>
+      <form id="wiz" class="form reg-form" data-agree-gate method="post" enctype="multipart/form-data" data-start="<?= (int)$startStep ?>"<?= $g ? ' data-google="1"' : '' ?> novalidate>
         <?= csrf_field() ?>
 
         <!-- Step 1 -->
@@ -392,16 +392,17 @@ function val(array $v, string $k): string { return e($v[$k] ?? ''); }
         <div class="wiz-step" data-step="6">
           <div class="step-head"><span class="st-ico"><?= icon('shield', 20) ?></span><h2>Agreements</h2><span class="step-count">Step 6 of 6</span></div>
           <p class="step-sub">Please read and tick all three to continue.</p>
-          <label class="check-row"><input type="checkbox" name="agree_fees" value="1" required> <span>I will <b>never charge applicants</b> any placement, training, or application fee.</span></label>
-          <label class="check-row"><input type="checkbox" name="agree_honest" value="1" required> <span>All information and job posts I submit will be <b>true and honest</b>.</span></label>
-          <label class="check-row"><input type="checkbox" name="agree_privacy" value="1" required> <span>I consent to Trabaho Tu Bunawan collecting and reviewing my information and documents for verification, under the Data Privacy Act of 2012 (RA 10173). Read the <a href="<?= url('privacy.php') ?>" target="_blank">Privacy Policy</a> and <a href="<?= url('terms.php') ?>" target="_blank">Terms</a>.</span></label>
+          <label class="check-row"><input type="checkbox" name="agree_fees" value="1" data-agree required> <span>I will <b>never charge applicants</b> any placement, training, or application fee.</span></label>
+          <label class="check-row"><input type="checkbox" name="agree_honest" value="1" data-agree required> <span>All information and job posts I submit will be <b>true and honest</b>.</span></label>
+          <label class="check-row"><input type="checkbox" name="agree_privacy" value="1" data-agree required> <span>I consent to Trabaho Tu Bunawan collecting and reviewing my information and documents for verification, under the Data Privacy Act of 2012 (RA 10173). Read the <a href="<?= url('privacy.php') ?>" target="_blank">Privacy Policy</a> and <a href="<?= url('terms.php') ?>" target="_blank">Terms</a>.</span></label>
+          <p class="step-note" data-agree-hint hidden>Tick all three agreements to enable the Submit button.</p>
           <p class="step-note step-note-gold">After you submit, we email you a link. Your account is created once you open it. You can post jobs once our admin approves your verification.</p>
         </div>
 
         <div class="wiz-nav">
           <button type="button" class="btn btn-outline" data-back>Back</button>
           <button type="button" class="btn btn-primary" data-next>Next</button>
-          <button type="submit" class="btn btn-primary" data-submit>Submit for verification</button>
+          <button type="submit" class="btn btn-primary" data-submit data-agree-btn disabled>Submit for verification</button>
         </div>
       </form>
     </div>
