@@ -70,14 +70,19 @@ require __DIR__ . '/../includes/dash_top.php';
 <?php if ($errors): ?><div class="alert alert-error" role="alert"><ul><?php foreach ($errors as $er): ?><li><?= e($er) ?></li><?php endforeach; ?></ul></div><?php endif; ?>
 
 <div class="sg-grid">
-  <form method="post" class="card form sg-card">
+  <form method="post" class="card form sg-card" id="pw-form">
     <?= csrf_field() ?><input type="hidden" name="action" value="password">
     <h2 class="sg-h"><span class="sg-ico"><?= icon('lock', 16) ?></span> Change password</h2>
     <p class="small sg-note">Use at least 8 characters with uppercase, lowercase, a number and a symbol.</p>
-    <label for="s-cur1">Current password</label><input id="s-cur1" name="current" type="password" autocomplete="current-password" required>
+    <label for="s-cur1">Current password</label><div class="pw"><input id="s-cur1" name="current" type="password" autocomplete="current-password" required><button type="button" class="pw-btn" data-toggle-pw="s-cur1" aria-label="Show password"></button></div>
     <div class="row2">
-      <div><label for="s-new">New password</label><input id="s-new" name="new" type="password" minlength="8" autocomplete="new-password" required></div>
-      <div><label for="s-new2">Confirm new password</label><input id="s-new2" name="new2" type="password" autocomplete="new-password" required></div>
+      <div><label for="s-new">New password</label>
+        <div class="pw"><input id="s-new" name="new" type="password" minlength="8" autocomplete="new-password" required><button type="button" class="pw-btn" data-toggle-pw="s-new" aria-label="Show password"></button></div>
+        <div class="meter pw-meter" data-pw-meter="s-new"><span></span></div>
+        <ul class="pw-rules" data-pw-rules="s-new"></ul></div>
+      <div><label for="s-new2">Confirm new password</label>
+        <div class="pw"><input id="s-new2" name="new2" type="password" autocomplete="new-password" required><button type="button" class="pw-btn" data-toggle-pw="s-new2" aria-label="Show password"></button></div>
+        <p class="pw-match" data-pw-match="s-new2" data-pw-with="s-new" hidden></p></div>
     </div>
     <button class="btn btn-primary" type="submit">Change password</button>
   </form>
@@ -87,7 +92,7 @@ require __DIR__ . '/../includes/dash_top.php';
     <h2 class="sg-h"><span class="sg-ico"><?= icon('send', 16) ?></span> Change email</h2>
     <p class="small sg-note">Current email: <b><?= e($me['email']) ?></b></p>
     <label for="s-email">New email</label><input id="s-email" name="email" type="email" maxlength="190" required>
-    <label for="s-cur2">Current password</label><input id="s-cur2" name="current" type="password" autocomplete="current-password" required>
+    <label for="s-cur2">Current password</label><div class="pw"><input id="s-cur2" name="current" type="password" autocomplete="current-password" required><button type="button" class="pw-btn" data-toggle-pw="s-cur2" aria-label="Show password"></button></div>
     <button class="btn btn-primary" type="submit">Update email</button>
   </form>
 </div>
@@ -98,9 +103,30 @@ require __DIR__ . '/../includes/dash_top.php';
   <p class="small sg-note">This permanently removes your profile, applications, saved jobs, and resume. It cannot be undone.</p>
   <div class="row2">
     <div><label for="s-conf">Type DELETE to confirm</label><input id="s-conf" name="confirm" autocomplete="off" required></div>
-    <div><label for="s-cur3">Current password</label><input id="s-cur3" name="current" type="password" autocomplete="current-password" required></div>
+    <div><label for="s-cur3">Current password</label><div class="pw"><input id="s-cur3" name="current" type="password" autocomplete="current-password" required><button type="button" class="pw-btn" data-toggle-pw="s-cur3" aria-label="Show password"></button></div></div>
   </div>
   <button class="btn btn-danger" type="submit">Delete my account</button>
 </form>
 </div>
+<script src="<?= url('assets/js/main.js') ?>?v=<?= filemtime(__DIR__ . '/../assets/js/main.js') ?>"></script>
+<script>
+// Same password rules as sign-up: 8+ characters, uppercase, lowercase, number and symbol.
+(function () {
+  var n = document.getElementById('s-new'), n2 = document.getElementById('s-new2');
+  if (!n || !n2) return;
+  function check() {
+    var v = n.value, msg = '';
+    if (v.length < 8) msg = 'Password must be at least 8 characters long.';
+    else if (!/[A-Z]/.test(v)) msg = 'Password must include an uppercase letter (A-Z).';
+    else if (!/[a-z]/.test(v)) msg = 'Password must include a lowercase letter (a-z).';
+    else if (!/\d/.test(v)) msg = 'Password must include a number (0-9).';
+    else if (!/[^A-Za-z0-9]/.test(v)) msg = 'Password must include a symbol, like ! @ # $ % & *.';
+    n.setCustomValidity(msg);
+    n2.setCustomValidity(n2.value && n2.value !== v ? 'The two new passwords do not match.' : '');
+  }
+  n.addEventListener('input', check);
+  n2.addEventListener('input', check);
+  check();
+})();
+</script>
 <?php require __DIR__ . '/../includes/dash_bottom.php'; ?>
