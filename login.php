@@ -154,7 +154,7 @@ require __DIR__ . '/includes/header.php';
         <p class="small center">First time here? <a href="<?= url('guide.php') ?>">Read the guide</a></p>
       </form>
 
-      <form id="panel-register" class="panel<?= $tab === 'register' ? ' show' : '' ?>" method="post" novalidate>
+      <form id="panel-register" class="panel<?= $tab === 'register' ? ' show' : '' ?>" method="post" data-agree-gate novalidate>
         <?= csrf_field() ?><input type="hidden" name="action" value="register">
         <div class="role-pick">
           <div class="role on"><b>I'm looking for a job</b><small>Register below</small></div>
@@ -175,8 +175,9 @@ require __DIR__ . '/includes/header.php';
         <div class="pw"><input id="r-pass2" name="password2" type="password" autocomplete="new-password" required>
           <button type="button" class="pw-btn" data-toggle-pw="r-pass2" aria-label="Show password"></button></div>
         <p class="pw-match" data-pw-match="r-pass2" data-pw-with="r-pass" hidden></p>
-        <label class="check-row"><input type="checkbox" name="agree" value="1"> <span>I agree to the <a href="<?= url('terms.php') ?>">Terms</a> and <a href="<?= url('privacy.php') ?>">Privacy Policy</a>.</span></label>
-        <button class="btn btn-primary block" type="submit">Create account</button>
+        <label class="check-row"><input type="checkbox" name="agree" value="1" data-agree> <span>I agree to the <a href="<?= url('terms.php') ?>">Terms</a> and <a href="<?= url('privacy.php') ?>">Privacy Policy</a>.</span></label>
+        <p class="small" data-agree-hint hidden>Tick the box above to enable the Create account button.</p>
+        <button class="btn btn-primary block" type="submit" data-agree-btn disabled>Create account</button>
         <?= google_button('register', 'Continue with Google', true) ?>
         <p class="small center">Already registered? <a href="#" data-tab-link="login">Log in</a></p>
         <p class="small center">First time here? <a href="<?= url('guide.php') ?>">Read the guide</a></p>
