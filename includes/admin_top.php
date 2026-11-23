@@ -64,7 +64,7 @@ $navItems = [
       <?php endforeach; ?>
     </nav>
     <div class="side-foot">
-      <form method="post" action="<?= url('logout.php') ?>"><?= csrf_field() ?>
+      <form method="post" action="<?= url('logout.php') ?>" data-confirm="Are you sure you want to log out?" data-confirm-title="Log out?" data-confirm-ok="Log out" data-confirm-cancel="Stay logged in" data-confirm-tone="info"><?= csrf_field() ?>
         <button class="side-link" type="submit"><?= icon('logout', 17) ?> Log out</button></form>
     </div>
   </aside>
