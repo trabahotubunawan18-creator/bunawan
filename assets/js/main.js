@@ -102,3 +102,25 @@ document.querySelectorAll('[data-toggle-pw]').forEach(btn => {
 document.querySelectorAll('.auth-card input').forEach(i =>
   i.addEventListener('input', () => document.querySelectorAll('.auth-card .alert').forEach(a => a.remove()))
 );
+
+// Keep a submit button disabled until every agreement checkbox is ticked.
+// Markup: <form data-agree-gate> ... <input type="checkbox" data-agree> ...
+//         <p data-agree-hint hidden>...</p> <button type="submit" data-agree-btn disabled>
+// (The server still checks the agreements, so this is only a convenience.)
+(function () {
+  document.querySelectorAll('form[data-agree-gate]').forEach(form => {
+    const boxes = [...form.querySelectorAll('input[type=checkbox][data-agree]')];
+    const btn = form.querySelector('[data-agree-btn]');
+    const hint = form.querySelector('[data-agree-hint]');
+    if (!boxes.length || !btn) return;
+    const sync = () => {
+      const ok = boxes.every(b => b.checked);
+      btn.disabled = !ok;
+      btn.setAttribute('aria-disabled', ok ? 'false' : 'true');
+      if (hint) hint.hidden = ok;
+    };
+    boxes.forEach(b => b.addEventListener('change', sync));
+    window.addEventListener('pageshow', sync);   // browser Back button restores ticked boxes
+    sync();
+  });
+})();
