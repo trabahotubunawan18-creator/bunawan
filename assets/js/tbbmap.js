@@ -2,7 +2,8 @@
  *
  *   TBBMap.viewer({map:'job-map', ll:[lat,lng], title:'Employer name'})
  *   TBBMap.picker({map:'pj-map', lat:'pj-lat', lng:'pj-lng', note:'pj-pin-note',
- *                  locate:'pj-locate', center:'pj-center'})
+ *                  locate:'pj-locate', center:'pj-center', barangay:'pj-brgy'})
+ *   barangay (optional) = id of the Barangay <select>; the map jumps to the chosen barangay.
  */
 (function () {
   'use strict';
@@ -13,7 +14,21 @@
     nativeZoom: 18,   // highest zoom with real satellite detail. Zooming past it enlarges the
                       // last real tile instead of showing "map data not available".
                       // If your area is sharp at 19, raise this to 19.
-    maxZoom: 20
+    maxZoom: 20,
+    // Approximate centre of each barangay in Bunawan, Agusan del Sur: [lat, lng, zoom].
+    // Keys are the barangay names in lower case, exactly as they appear in the Barangay dropdown.
+    barangays: {
+      'bunawan brook': [8.1594, 126.0106, 15],
+      'consuelo':      [8.2386, 125.9837, 15],
+      'imelda':        [8.1213, 126.0477, 14],
+      'libertad':      [8.1084, 126.0249, 14],
+      'mambalili':     [8.1986, 125.9694, 14],
+      'nueva era':     [8.1437, 125.9453, 14],
+      'poblacion':     [8.1633, 125.9902, 15],
+      'san andres':    [8.2066, 125.9944, 14],
+      'san marcos':    [8.2144, 125.9271, 14],
+      'san teodoro':   [8.1788, 125.9934, 15]
+    }
   };
   var ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/';
 
@@ -150,7 +165,44 @@
       say(msg || ('Pin set (' + lat.toFixed(5) + ', ' + lng.toFixed(5) + '). Drag it to adjust.'), 'ok');
       return true;
     }
-    if (has) put(start[0], start[1]); else say('No pin yet. Click the map where the work is.');
+    // ----- barangay -> map -----
+    var brgySel = o.barangay ? $(o.barangay) : null;
+    function brgyInfo() {
+      if (!brgySel || !brgySel.value) return null;
+      var opt = brgySel.options[brgySel.selectedIndex];
+      var name = ((opt && opt.text) || '').trim();
+      var c = CFG.barangays[name.toLowerCase()];
+      return c ? { name: name, ll: [c[0], c[1]], zoom: c[2] } : null;
+    }
+    function clearPin() {
+      if (marker) { map.removeLayer(marker); marker = null; }
+      if (ring) { map.removeLayer(ring); ring = null; }
+      latEl.value = ''; lngEl.value = '';
+    }
+    function showBarangay(userChanged) {
+      var b = brgyInfo();
+      if (!b) { if (userChanged) say('Choose a barangay, then click the map where the work is.'); return; }
+      if (marker) {
+        if (!userChanged) return;                        // editing a saved job: keep its pin and view
+        if (map.distance(marker.getLatLng(), b.ll) <= 4000) return;   // pin already in this barangay
+        clearPin();                                      // pin belongs to another barangay
+        map.setView(b.ll, b.zoom);
+        say('Map moved to ' + b.name + '. Please place the pin on the exact location.', 'warn');
+        return;
+      }
+      map.setView(b.ll, b.zoom);
+      say('Showing ' + b.name + '. Click the map to place the pin on the exact spot.');
+    }
+    if (brgySel) {
+      brgySel.addEventListener('change', function () { showBarangay(true); });
+      button('Go to the barangay', SVG_TARGET, function () {
+        var b = brgyInfo(); if (b) map.setView(b.ll, b.zoom); else say('Choose a barangay first.', 'warn');
+      }, 'topleft').addTo(map);
+    }
+
+    if (has) put(start[0], start[1]);
+    else if (brgyInfo()) showBarangay(false);
+    else say(brgySel ? 'Choose a barangay first, then click the map where the work is.' : 'No pin yet. Click the map where the work is.');
 
     map.on('click', function (e) { put(e.latlng.lat, e.latlng.lng); });
 
