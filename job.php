@@ -257,7 +257,7 @@ require __DIR__ . '/includes/' . ($inDash ? 'dash_top.php' : 'header.php');
           <p class="jd-maplinks"><a href="<?= e($mapUrl) ?>" target="_blank" rel="noopener noreferrer">Open in Google Maps</a> &middot; <a href="https://www.google.com/maps/dir/?api=1&destination=<?= e($job['latitude'] . ',' . $job['longitude']) ?>" target="_blank" rel="noopener noreferrer">Get directions</a></p>
           <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
           <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-          <script src="<?= url('assets/js/tbbmap.js') ?>?v=2"></script>
+          <script src="<?= url('assets/js/tbbmap.js') ?>?v=<?= filemtime(__DIR__ . '/assets/js/tbbmap.js') ?>"></script>
           <script>
           TBBMap.viewer({map:'job-map', ll:[<?= (float)$job['latitude'] ?>,<?= (float)$job['longitude'] ?>], title:<?= json_encode($job['employer_name']) ?>});
           </script>
