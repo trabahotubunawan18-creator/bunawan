@@ -102,22 +102,48 @@ require __DIR__ . '/../includes/dash_top.php';
   </div>
   <div class="bj-head-end">
     <?php if ($active): ?><a class="bj-clear-top" href="<?= url('seeker/browse.php') ?>">&#10005; Clear filters</a><?php endif; ?>
-    <span class="bj-count"><b><?= number_format($total) ?></b> <?= $total === 1 ? 'job' : 'jobs' ?> found<?= $search !== '' ? ' for “' . e($search) . '”' : '' ?><?= $geo && $geo['radius'] ? ' within ' . (int)$geo['radius'] . ' km' : '' ?></span>
+    <span class="bj-count"><b><?= number_format($total) ?></b> <?= $total === 1 ? 'job' : 'jobs' ?> found<?= $search !== '' ? ' for “' . e($search) . '”' : '' ?><?= $geo && $sort === 'nearest' ? ' · closest first' : '' ?></span>
   </div>
 </header>
 
+<style>
+/* Filter bar layout: row 1 search, row 2 six dropdowns, row 3 quick filters + Near me + sort */
+.browse .bj-filters .bj-top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}
+.browse .bj-filters .bj-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-top:10px}
+.browse .bj-filters .bj-grid>*{min-width:0}
+.browse .bj-filters .bj-grid select,.browse .bj-filters .bj-grid .bj-money{width:100%}
+.browse .bj-filters .bj-row2 .bj-end{margin-left:auto}
+.browse .bj-filters .bj-row2 .bj-end select{width:auto;min-width:160px}
+@media (max-width:1100px){.browse .bj-filters .bj-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:700px){
+  .browse .bj-filters .bj-top{grid-template-columns:1fr}
+  .browse .bj-filters .bj-top .btn{width:100%}
+  .browse .bj-filters .bj-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .browse .bj-filters .bj-row2 .bj-end{margin-left:0;width:100%}
+  .browse .bj-filters .bj-row2 .bj-end select{width:100%}
+  /* 16px stops iPhones from zooming the page when a field is tapped; 40px high chips are easier to tap */
+  .browse .bj-filters input:not([type=checkbox]):not([type=radio]):not([type=file]),.browse .bj-filters select{font-size:16px}
+  .browse .bj-filters .chip-check{min-height:40px;padding:8px 14px;font-size:14px}
+}
+@media (max-width:380px){.browse .bj-filters .bj-grid{grid-template-columns:1fr}}   /* very narrow phones: one dropdown per line so nothing is cut off */
+</style>
 <form method="get" action="<?= url('seeker/browse.php') ?>" class="card form filterbar bj-filters">
-  <div class="bj-row">
-    <div class="bj-search a-q"><label class="sr-only" for="b-q">Keyword</label><?= icon('search', 16) ?><input id="b-q" type="search" name="q" maxlength="100" value="<?= e($search) ?>" placeholder="Job title or company"></div>
-    <div class="a-b"><label class="sr-only" for="b-b">Barangay</label><select id="b-b" name="barangay"><option value="">All barangays</option>
+  <div class="bj-top">
+    <div class="bj-search"><label class="sr-only" for="b-q">Keyword</label><?= icon('search', 16) ?><input id="b-q" type="search" name="q" maxlength="100" value="<?= e($search) ?>" placeholder="Job title or company"></div>
+    <button class="btn btn-gold" type="submit"><?= icon('search', 16) ?> Search jobs</button>
+  </div>
+  <div class="bj-grid">
+    <div><label class="sr-only" for="b-b">Barangay</label><select id="b-b" name="barangay"><option value="">All barangays</option>
       <?php foreach ($barangays as $b): ?><option value="<?= (int)$b['id'] ?>" <?= $barangay === (int)$b['id'] ? 'selected' : '' ?>><?= e($b['name']) ?></option><?php endforeach; ?></select></div>
-    <div class="a-s"><label class="sr-only" for="b-sk">Skill</label><select id="b-sk" name="skill"><option value="">All skills</option>
-      <?php foreach ($skillOpts as $so): ?><option value="<?= e($so['k']) ?>" <?= $skill === (string)$so['k'] ? 'selected' : '' ?>><?= e($so['label']) ?> (<?= (int)$so['n'] ?>)</option><?php endforeach; ?></select></div>
-    <div class="a-c"><label class="sr-only" for="b-c">Category</label><select id="b-c" name="category"><option value="">All categories</option>
+    <div><label class="sr-only" for="b-c">Category</label><select id="b-c" name="category"><option value="">All categories</option>
       <?php foreach ($categories as $c): ?><option value="<?= (int)$c['id'] ?>" <?= $category === (int)$c['id'] ? 'selected' : '' ?>><?= e($c['name']) ?></option><?php endforeach; ?></select></div>
-    <div class="a-t"><label class="sr-only" for="b-t">Type</label><select id="b-t" name="type"><option value="">Any type</option>
+    <div><label class="sr-only" for="b-t">Type</label><select id="b-t" name="type"><option value="">Any type</option>
       <?php foreach ($types as $t): ?><option value="<?= e($t) ?>" <?= $type === $t ? 'selected' : '' ?>><?= e(type_label($t)) ?></option><?php endforeach; ?></select></div>
-    <button class="btn btn-gold a-go" type="submit"><?= icon('search', 16) ?> Search jobs</button>
+    <div><label class="sr-only" for="b-w">Work schedule</label><select id="b-w" name="schedule"><option value="">Any schedule</option>
+      <?php foreach (WORK_SCHEDULES as $k => $l): if ($k === 'any') continue; ?><option value="<?= e($k) ?>" <?= $schedule === $k ? 'selected' : '' ?>><?= e($l) ?></option><?php endforeach; ?></select></div>
+    <div><label class="sr-only" for="b-sk">Skill</label><select id="b-sk" name="skill"><option value="">All skills</option>
+      <?php foreach ($skillOpts as $so): ?><option value="<?= e($so['k']) ?>" <?= $skill === (string)$so['k'] ? 'selected' : '' ?>><?= e($so['label']) ?> (<?= (int)$so['n'] ?>)</option><?php endforeach; ?></select></div>
+    <div class="bj-money"><label class="sr-only" for="b-s">Minimum salary (₱)</label><span class="bj-peso" aria-hidden="true">₱</span><input id="b-s" type="number" name="salary_min" min="0" step="100" value="<?= $smin ? e($smin) : '' ?>" placeholder="Min. salary"></div>
   </div>
   <div class="bj-row2">
     <label class="check-row chip-check"><input type="checkbox" name="student" value="1" <?= $student ? 'checked' : '' ?>> <span>Student-friendly</span></label>
@@ -125,15 +151,12 @@ require __DIR__ . '/../includes/dash_top.php';
     <label class="check-row chip-check" title="Only jobs that ask for at least one of your skills"><input type="checkbox" name="mine" value="1" <?= $mine ? 'checked' : '' ?>> <span>Match my skills</span></label>
     <?php render_nearme($geo); ?>
     <span class="bj-end">
-      <span class="bj-money"><label class="sr-only" for="b-s">Minimum salary (₱)</label><span class="bj-peso" aria-hidden="true">₱</span><input id="b-s" type="number" name="salary_min" min="0" step="100" value="<?= $smin ? e($smin) : '' ?>" placeholder="Min. salary"></span>
-      <span><label class="sr-only" for="b-w">Work schedule</label><select id="b-w" name="schedule"><option value="">Any schedule</option>
-        <?php foreach (WORK_SCHEDULES as $k => $l): if ($k === 'any') continue; ?><option value="<?= e($k) ?>" <?= $schedule === $k ? 'selected' : '' ?>><?= e($l) ?></option><?php endforeach; ?></select></span>
-      <span><label class="sr-only" for="b-o">Sort by</label><select id="b-o" name="sort">
+      <label class="sr-only" for="b-o">Sort by</label><select id="b-o" name="sort">
         <option value="newest" <?= $sort === 'newest' ? 'selected' : '' ?>>Newest first</option>
         <option value="oldest" <?= $sort === 'oldest' ? 'selected' : '' ?>>Oldest first</option>
         <option value="deadline" <?= $sort === 'deadline' ? 'selected' : '' ?>>Nearest deadline</option>
         <option value="nearest" <?= $sort === 'nearest' ? 'selected' : '' ?>>Nearest to me</option>
-        <option value="match" <?= $sort === 'match' ? 'selected' : '' ?>>Best skills match</option></select></span>
+        <option value="match" <?= $sort === 'match' ? 'selected' : '' ?>>Best skills match</option></select>
     </span>
   </div>
 </form>
