@@ -65,7 +65,7 @@ if ($mine) {   // only jobs that ask for at least one of my skills
     } else $where .= ' AND 1 = 0';
 }
 
-$orders = ['newest' => 'is_premium DESC, j.created_at DESC', 'oldest' => 'j.created_at ASC', 'deadline' => 'j.deadline ASC', 'match' => 'is_premium DESC, j.created_at DESC'];
+$orders = ['newest' => 'is_premium DESC, j.created_at DESC', 'oldest' => 'is_premium DESC, j.created_at ASC', 'deadline' => 'is_premium DESC, j.deadline ASC', 'match' => 'is_premium DESC, j.created_at DESC'];
 $cnt = $pdo->prepare('SELECT COUNT(*) FROM (' . PUBLIC_JOB_SQL . $where . ') t');
 $cnt->execute($p);
 $total = (int)$cnt->fetchColumn();
@@ -73,9 +73,9 @@ $st = $pdo->prepare(PUBLIC_JOB_SQL . $where . ' ORDER BY ' . $orders[$sort] . ' 
 $st->execute($p);
 $jobs = $st->fetchAll();
 attach_skill_info($pdo, $jobs, $myKeys);
-if ($sort === 'match') {   // best match first, then my barangay, then Featured, then newest
+if ($sort === 'match') {   // Featured first, then best match, then my barangay, then newest
     $mb = $pdo->prepare('SELECT barangay_id FROM seeker_profiles WHERE user_id = ?'); $mb->execute([$uid]);
-    $jobs = array_slice(skill_sort_jobs($jobs, (int)$mb->fetchColumn() ?: null), 0, $page * $perPage);
+    $jobs = array_slice(skill_sort_jobs($jobs, (int)$mb->fetchColumn() ?: null, true), 0, $page * $perPage);
 }
 $skillOpts = skills_in_use($pdo);
 
