@@ -67,35 +67,35 @@ function distance_label(float $km): string {
     if ($km < 1) return max(10, (int)(round($km * 100) * 10)) . ' m';
     return number_format($km, $km < 10 ? 1 : 0) . ' km';
 }
-// "Jobs near me" button + distance menu. Put it INSIDE the search <form>. Needs assets/js/nearme.js (loaded here).
+// One "Near me" chip. Tap = share location and show the closest jobs first. Tap again (the x) = turn it off.
+// Put it INSIDE the search <form>. Needs assets/js/nearme.js (loaded here).
 function render_nearme(?array $geo): void {
     static $css = false;
     if (!$css) { $css = true; ?>
 <style>
-.nm{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
-.nm-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px}
-.nm.is-on .nm-btn{background:var(--mint,#E4F3E9);border-color:var(--green,#1B7F45);color:var(--forest,#0F3D2E)}
-.nm select{min-height:40px}
-.nm-clear{background:none;border:0;padding:0;color:var(--green,#1B7F45);font:inherit;font-size:.88rem;text-decoration:underline;cursor:pointer}
-.nm-status{flex-basis:100%;margin:0;font-size:.85rem;color:var(--muted,#5b6b61)}
-.nm-status.is-warn{color:#9A3412}.nm-status.is-ok{color:var(--green,#1B7F45)}
+.nm{position:relative;display:inline-flex;vertical-align:middle}
+.nm-chip{display:inline-flex;align-items:center;gap:6px;margin:0;padding:5px 12px;border:1px solid var(--line-strong,#C9D1CB);border-radius:99px;background:#fff;font:inherit;font-size:13px;font-weight:500;color:var(--ink-2,#2F3B34);cursor:pointer;transition:background .15s,border-color .15s}
+.nm-chip:hover{border-color:var(--green,#1B7F45)}
+.nm-chip:focus-visible{outline:3px solid rgba(27,127,69,.35);outline-offset:2px}
+.nm-chip .ico{color:var(--green,#1B7F45)}
+.nm-chip.is-on{background:#E4F3E9;border-color:var(--green,#1B7F45);color:var(--forest,#0F3D2E);font-weight:600}
+.nm-chip:disabled{opacity:.7;cursor:progress}
+.nm-x{display:none;margin-left:2px;font-size:17px;line-height:1;color:var(--green,#1B7F45)}
+.nm-chip.is-on .nm-x{display:inline}
+.nm-status{position:absolute;top:calc(100% + 6px);left:0;z-index:20;width:max-content;max-width:280px;padding:7px 11px;border:1px solid #F5C6A5;border-radius:10px;background:#fff;box-shadow:0 6px 18px rgba(0,0,0,.12);font-size:12.5px;line-height:1.35;color:#9A3412;white-space:normal}
+.nm-status.is-ok{border-color:#BFE3CB;color:var(--green,#1B7F45)}
+.nm-status:empty{display:none}
 .facts .fact-dist{font-weight:700;color:var(--green,#1B7F45)}
 </style>
-<script src="<?= url('assets/js/nearme.js') ?>?v=1" defer></script>
+<script src="<?= url('assets/js/nearme.js') ?>?v=2" defer></script>
 <?php }
     $on = $geo !== null; ?>
-<div class="nm<?= $on ? ' is-on' : '' ?>" data-nearme>
+<span class="nm" data-nearme>
   <input type="hidden" name="lat" value="<?= $on ? e((string)$geo['lat']) : '' ?>" data-nm-lat>
   <input type="hidden" name="lng" value="<?= $on ? e((string)$geo['lng']) : '' ?>" data-nm-lng>
-  <button type="button" class="btn btn-outline nm-btn" data-nm-btn><?= icon('pin', 16) ?> <span><?= $on ? 'Update my location' : 'Jobs near me' ?></span></button>
-  <label class="sr-only" for="nm-radius">Distance</label>
-  <select id="nm-radius" name="radius" title="How far from you">
-    <option value="">Any distance</option>
-    <?php foreach (NEARBY_RADII as $km): ?><option value="<?= $km ?>" <?= $on && $geo['radius'] === $km ? 'selected' : '' ?>>Within <?= $km ?> km</option><?php endforeach; ?>
-  </select>
-  <button type="button" class="nm-clear" data-nm-clear <?= $on ? '' : 'hidden' ?>>&#10005; Clear location</button>
-  <p class="nm-status" data-nm-status aria-live="polite"><?= $on ? 'Using your location. Jobs without a map pin are ' . ($geo['radius'] ? 'hidden.' : 'listed last.') : 'Share your location to see jobs closest to you.' ?></p>
-</div>
+  <button type="button" class="nm-chip<?= $on ? ' is-on' : '' ?>" data-nm-btn aria-pressed="<?= $on ? 'true' : 'false' ?>" title="<?= $on ? 'Showing the closest jobs first. Tap to turn off.' : 'Show the closest jobs first' ?>"><?= icon('pin', 15) ?> <span>Near me</span> <span class="nm-x" aria-hidden="true">&times;</span></button>
+  <span class="nm-status" data-nm-status role="status" aria-live="polite"></span>
+</span>
 <?php }
 
 function salary_text(array $j): string {
