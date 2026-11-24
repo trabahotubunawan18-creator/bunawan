@@ -89,7 +89,7 @@ require __DIR__ . '/../includes/emp_top.php';
         <div><label for="s-phone">Mobile number</label><input id="s-phone" name="phone" type="tel" inputmode="numeric" pattern="09[0-9]{9}" title="Enter an 11-digit mobile number, like 09123456789" oninput="var v=this.value.replace(/\D/g,'');if(v.length===12&&v.slice(0,3)==='639')v='0'+v.slice(2);this.value=v;this.setCustomValidity(v.length===11&&v.slice(0,2)==='09'?'':'Mobile number must be exactly 11 digits, like 09123456789.');if(v.length>11)this.reportValidity()" value="<?= e(norm_mobile($_POST['phone'] ?? $me['phone'])) ?>" placeholder="09123456789" required></div>
       </div>
       <div class="set-confirm">
-        <div><label for="s-cur0">Current password</label><input id="s-cur0" name="current" type="password" autocomplete="current-password" placeholder="To confirm it is you" required></div>
+        <div><label for="s-cur0">Current password</label><div class="pw"><input id="s-cur0" name="current" type="password" autocomplete="current-password" placeholder="To confirm it is you" required><button type="button" class="pw-btn" data-toggle-pw="s-cur0" aria-label="Show password"></button></div></div>
         <button class="btn btn-primary" type="submit">Save</button>
       </div>
     </form>
@@ -102,7 +102,7 @@ require __DIR__ . '/../includes/emp_top.php';
       </div>
       <label for="s-email">New email</label><input id="s-email" name="email" type="email" maxlength="190" required>
       <div class="set-confirm">
-        <div><label for="s-cur2">Current password</label><input id="s-cur2" name="current" type="password" autocomplete="current-password" placeholder="To confirm it is you" required></div>
+        <div><label for="s-cur2">Current password</label><div class="pw"><input id="s-cur2" name="current" type="password" autocomplete="current-password" placeholder="To confirm it is you" required><button type="button" class="pw-btn" data-toggle-pw="s-cur2" aria-label="Show password"></button></div></div>
         <button class="btn btn-primary" type="submit">Update</button>
       </div>
     </form>
@@ -115,9 +115,9 @@ require __DIR__ . '/../includes/emp_top.php';
       <div><h2>Change password</h2><p>Use at least 8 characters with uppercase, lowercase, a number and a symbol.</p></div>
     </div>
     <div class="set-pw">
-      <div><label for="s-cur1">Current password</label><input id="s-cur1" name="current" type="password" autocomplete="current-password" required></div>
-      <div><label for="s-new">New password</label><input id="s-new" name="new" type="password" minlength="8" autocomplete="new-password" required></div>
-      <div><label for="s-new2">Confirm new password</label><input id="s-new2" name="new2" type="password" autocomplete="new-password" required></div>
+      <div><label for="s-cur1">Current password</label><div class="pw"><input id="s-cur1" name="current" type="password" autocomplete="current-password" required><button type="button" class="pw-btn" data-toggle-pw="s-cur1" aria-label="Show password"></button></div></div>
+      <div><label for="s-new">New password</label><div class="pw"><input id="s-new" name="new" type="password" minlength="8" autocomplete="new-password" required><button type="button" class="pw-btn" data-toggle-pw="s-new" aria-label="Show password"></button></div></div>
+      <div><label for="s-new2">Confirm new password</label><div class="pw"><input id="s-new2" name="new2" type="password" autocomplete="new-password" required><button type="button" class="pw-btn" data-toggle-pw="s-new2" aria-label="Show password"></button></div></div>
       <button class="btn btn-primary" type="submit">Change</button>
     </div>
   </form>
@@ -130,4 +130,25 @@ require __DIR__ . '/../includes/emp_top.php';
     </div>
   </div>
 </div>
+<script src="<?= url('assets/js/main.js') ?>?v=<?= filemtime(__DIR__ . '/../assets/js/main.js') ?>"></script>
+<script>
+// Same password rules as sign-up: 8+ characters, uppercase, lowercase, number and symbol.
+(function () {
+  var n = document.getElementById('s-new'), n2 = document.getElementById('s-new2');
+  if (!n || !n2) return;
+  function check() {
+    var v = n.value, msg = '';
+    if (v.length < 8) msg = 'Password must be at least 8 characters long.';
+    else if (!/[A-Z]/.test(v)) msg = 'Password must include an uppercase letter (A-Z).';
+    else if (!/[a-z]/.test(v)) msg = 'Password must include a lowercase letter (a-z).';
+    else if (!/\d/.test(v)) msg = 'Password must include a number (0-9).';
+    else if (!/[^A-Za-z0-9]/.test(v)) msg = 'Password must include a symbol, like ! @ # $ % & *.';
+    n.setCustomValidity(msg);
+    n2.setCustomValidity(n2.value && n2.value !== v ? 'The two new passwords do not match.' : '');
+  }
+  n.addEventListener('input', check);
+  n2.addEventListener('input', check);
+  check();
+})();
+</script>
 <?php require __DIR__ . '/../includes/dash_bottom.php'; ?>
