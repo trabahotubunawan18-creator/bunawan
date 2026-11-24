@@ -86,6 +86,11 @@ function render_nearme(?array $geo): void {
 .nm-status.is-ok{border-color:#BFE3CB;color:var(--green,#1B7F45)}
 .nm-status:empty{display:none}
 .facts .fact-dist{font-weight:700;color:var(--green,#1B7F45)}
+@media (max-width:700px){
+  .nm{position:static}
+  .nm-chip{min-height:40px;padding:8px 14px;font-size:14px}
+  .nm-status{position:fixed;top:auto;left:12px;right:12px;bottom:16px;width:auto;max-width:none;padding:11px 14px;font-size:14px;z-index:1000}
+}
 </style>
 <script src="<?= url('assets/js/nearme.js') ?>?v=2" defer></script>
 <?php }
