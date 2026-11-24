@@ -61,15 +61,11 @@ require __DIR__ . '/../includes/dash_top.php';
 ?>
 <div class="settings">
 <style>
-.settings .pw-panel{margin-top:12px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--sage,#F4F8F5)}
-.settings .pw-panel .pw-meter{margin-top:0;background:#E1EAE4}
-.settings .pw-rules-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 18px;margin:12px 0 0}
 .settings .pw-match{margin-top:8px}
 .settings .sg-grid{align-items:stretch}
 .settings .sg-card{display:flex;flex-direction:column}
 .settings .sg-card>.btn{align-self:flex-start}
 .settings .sg-spacer{flex:1}
-@media (max-width:560px){.settings .pw-rules-grid{grid-template-columns:1fr}}
 </style>
 <header class="sg-head">
   <div>
@@ -92,10 +88,6 @@ require __DIR__ . '/../includes/dash_top.php';
       <div><label for="s-new2">Confirm new password</label>
         <div class="pw"><input id="s-new2" name="new2" type="password" autocomplete="new-password" required><button type="button" class="pw-btn" data-toggle-pw="s-new2" aria-label="Show password"></button></div>
         <p class="pw-match" data-pw-match="s-new2" data-pw-with="s-new" hidden></p></div>
-    </div>
-    <div class="pw-panel">
-      <div class="meter pw-meter" data-pw-meter="s-new"><span></span></div>
-      <ul class="pw-rules pw-rules-grid" data-pw-rules="s-new"></ul>
     </div>
     <button class="btn btn-primary" type="submit">Change password</button>
   </form>
