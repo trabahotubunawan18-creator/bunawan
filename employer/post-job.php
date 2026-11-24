@@ -291,7 +291,7 @@ $pjDayPct = DAILY_POST_LIMIT > 0 ? min(100, (int)round($limits['today'] / DAILY_
 </div>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="<?= url('assets/js/tbbmap.js') ?>?v=3"></script>
+<script src="<?= url('assets/js/tbbmap.js') ?>?v=<?= filemtime(__DIR__ . '/../assets/js/tbbmap.js') ?>"></script>
 <script>
 TBBMap.picker({map:'pj-map', lat:'pj-lat', lng:'pj-lng', note:'pj-pin-note', locate:'pj-locate', center:'pj-center', barangay:'pj-brgy'});
 </script>
