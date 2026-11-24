@@ -120,8 +120,7 @@ $moreUrl = 'jobs.php?' . http_build_query($active + ['page' => $page + 1]);
         <label class="check-row"><input type="checkbox" name="student" value="1" <?= $student ? 'checked' : '' ?>> <span>Student-friendly</span></label>
         <label class="check-row"><input type="checkbox" name="noresume" value="1" <?= $noresume ? 'checked' : '' ?>> <span>No resume needed</span></label>
 
-        <label>Near me</label>
-        <?php render_nearme($geo); ?>
+        <div class="mt-2"><?php render_nearme($geo); ?></div>
 
         <label for="f-sort">Sort by</label>
         <select id="f-sort" name="sort">
