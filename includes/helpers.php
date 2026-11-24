@@ -490,8 +490,10 @@ function attach_skill_info(PDO $pdo, array &$jobs, ?array $mine = null): void {
     unset($j);
 }
 // Best skill match first, then the seeker's own barangay, then Featured, then newest. Jobs with no skills listed count as 0%.
-function skill_sort_jobs(array $jobs, ?int $barangayId = null): array {
-    usort($jobs, function ($a, $b) use ($barangayId) {
+// With $featuredFirst = true, Featured (Premium) posts always come first and the order above applies inside each group.
+function skill_sort_jobs(array $jobs, ?int $barangayId = null, bool $featuredFirst = false): array {
+    usort($jobs, function ($a, $b) use ($barangayId, $featuredFirst) {
+        if ($featuredFirst && (int)$a['is_premium'] !== (int)$b['is_premium']) return (int)$b['is_premium'] <=> (int)$a['is_premium'];
         $pa = (int)($a['match']['pct'] ?? 0); $pb = (int)($b['match']['pct'] ?? 0);
         if ($pa !== $pb) return $pb <=> $pa;
         if ($barangayId) {
