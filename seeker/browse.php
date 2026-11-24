@@ -18,13 +18,15 @@ if ($schedule === 'any' || !isset(WORK_SCHEDULES[$schedule])) $schedule = '';
 $noresume = !empty($_GET['noresume']);
 $skill    = mb_substr(trim((string)($_GET['skill'] ?? '')), 0, 80);
 $mine     = !empty($_GET['mine']);
-$sort     = in_array($_GET['sort'] ?? '', ['oldest', 'deadline', 'match'], true) ? $_GET['sort'] : 'newest';
+$geo      = geo_from_request($_GET);   // set when the seeker shared their location ("Jobs near me")
+$sort     = in_array($_GET['sort'] ?? '', array_merge(['oldest', 'deadline', 'match'], $geo ? ['nearest'] : []), true) ? $_GET['sort'] : 'newest';
 $page     = max(1, min(50, (int)($_GET['page'] ?? 1)));
 $perPage  = 12;
 
 $active = array_filter(['q' => $search, 'barangay' => $barangay, 'category' => $category, 'type' => $type,
     'salary_min' => $smin ?: '', 'student' => $student ? 1 : '', 'schedule' => $schedule,
-    'noresume' => $noresume ? 1 : '', 'skill' => $skill, 'mine' => $mine ? 1 : '', 'sort' => $sort !== 'newest' ? $sort : ''], fn($v) => $v !== '' && $v !== 0);
+    'noresume' => $noresume ? 1 : '', 'skill' => $skill, 'mine' => $mine ? 1 : '',
+    'lat' => $geo['lat'] ?? '', 'lng' => $geo['lng'] ?? '', 'radius' => $geo['radius'] ?? '', 'sort' => $sort !== 'newest' ? $sort : ''], fn($v) => $v !== '' && $v !== 0);
 $self = 'seeker/browse.php' . ($active ? '?' . http_build_query($active + ($page > 1 ? ['page' => $page] : [])) : '');
 
 // ---- One-click Save / Unsave ----
@@ -65,17 +67,19 @@ if ($mine) {   // only jobs that ask for at least one of my skills
     } else $where .= ' AND 1 = 0';
 }
 
-$orders = ['newest' => 'is_premium DESC, j.created_at DESC', 'oldest' => 'is_premium DESC, j.created_at ASC', 'deadline' => 'is_premium DESC, j.deadline ASC', 'match' => 'is_premium DESC, j.created_at DESC'];
+$where .= geo_where($geo);
+
+$orders = ['nearest' => GEO_ORDER, 'newest' => 'is_premium DESC, j.created_at DESC', 'oldest' => 'j.created_at ASC', 'deadline' => 'j.deadline ASC', 'match' => 'is_premium DESC, j.created_at DESC'];
 $cnt = $pdo->prepare('SELECT COUNT(*) FROM (' . PUBLIC_JOB_SQL . $where . ') t');
 $cnt->execute($p);
 $total = (int)$cnt->fetchColumn();
-$st = $pdo->prepare(PUBLIC_JOB_SQL . $where . ' ORDER BY ' . $orders[$sort] . ' LIMIT ' . ($sort === 'match' ? 200 : (int)($page * $perPage)));
+$st = $pdo->prepare(geo_public_job_sql($geo) . $where . ' ORDER BY ' . $orders[$sort] . ' LIMIT ' . ($sort === 'match' ? 200 : (int)($page * $perPage)));
 $st->execute($p);
 $jobs = $st->fetchAll();
 attach_skill_info($pdo, $jobs, $myKeys);
-if ($sort === 'match') {   // Featured first, then best match, then my barangay, then newest
+if ($sort === 'match') {   // best match first, then my barangay, then Featured, then newest
     $mb = $pdo->prepare('SELECT barangay_id FROM seeker_profiles WHERE user_id = ?'); $mb->execute([$uid]);
-    $jobs = array_slice(skill_sort_jobs($jobs, (int)$mb->fetchColumn() ?: null, true), 0, $page * $perPage);
+    $jobs = array_slice(skill_sort_jobs($jobs, (int)$mb->fetchColumn() ?: null), 0, $page * $perPage);
 }
 $skillOpts = skills_in_use($pdo);
 
@@ -98,7 +102,7 @@ require __DIR__ . '/../includes/dash_top.php';
   </div>
   <div class="bj-head-end">
     <?php if ($active): ?><a class="bj-clear-top" href="<?= url('seeker/browse.php') ?>">&#10005; Clear filters</a><?php endif; ?>
-    <span class="bj-count"><b><?= number_format($total) ?></b> <?= $total === 1 ? 'job' : 'jobs' ?> found<?= $search !== '' ? ' for “' . e($search) . '”' : '' ?></span>
+    <span class="bj-count"><b><?= number_format($total) ?></b> <?= $total === 1 ? 'job' : 'jobs' ?> found<?= $search !== '' ? ' for “' . e($search) . '”' : '' ?><?= $geo && $geo['radius'] ? ' within ' . (int)$geo['radius'] . ' km' : '' ?></span>
   </div>
 </header>
 
@@ -119,6 +123,7 @@ require __DIR__ . '/../includes/dash_top.php';
     <label class="check-row chip-check"><input type="checkbox" name="student" value="1" <?= $student ? 'checked' : '' ?>> <span>Student-friendly</span></label>
     <label class="check-row chip-check"><input type="checkbox" name="noresume" value="1" <?= $noresume ? 'checked' : '' ?>> <span>No resume needed</span></label>
     <label class="check-row chip-check" title="Only jobs that ask for at least one of your skills"><input type="checkbox" name="mine" value="1" <?= $mine ? 'checked' : '' ?>> <span>Match my skills</span></label>
+    <?php render_nearme($geo); ?>
     <span class="bj-end">
       <span class="bj-money"><label class="sr-only" for="b-s">Minimum salary (₱)</label><span class="bj-peso" aria-hidden="true">₱</span><input id="b-s" type="number" name="salary_min" min="0" step="100" value="<?= $smin ? e($smin) : '' ?>" placeholder="Min. salary"></span>
       <span><label class="sr-only" for="b-w">Work schedule</label><select id="b-w" name="schedule"><option value="">Any schedule</option>
@@ -127,6 +132,7 @@ require __DIR__ . '/../includes/dash_top.php';
         <option value="newest" <?= $sort === 'newest' ? 'selected' : '' ?>>Newest first</option>
         <option value="oldest" <?= $sort === 'oldest' ? 'selected' : '' ?>>Oldest first</option>
         <option value="deadline" <?= $sort === 'deadline' ? 'selected' : '' ?>>Nearest deadline</option>
+        <option value="nearest" <?= $sort === 'nearest' ? 'selected' : '' ?>>Nearest to me</option>
         <option value="match" <?= $sort === 'match' ? 'selected' : '' ?>>Best skills match</option></select></span>
     </span>
   </div>
@@ -142,7 +148,7 @@ require __DIR__ . '/../includes/dash_top.php';
 <?php else: ?>
   <div class="card empty">
     <img src="<?= url('assets/img/empty-no-jobs.svg') ?>" alt="" width="150" onerror="this.style.display='none'">
-    <h3>No jobs match your search</h3><p>Try fewer filters or a different keyword. New jobs are posted often.</p>
+    <h3>No jobs match your search</h3><p><?= $geo && $geo['radius'] ? 'No jobs with a map pin within ' . (int)$geo['radius'] . ' km of you. Try a bigger distance, or choose “Any distance”.' : 'Try fewer filters or a different keyword. New jobs are posted often.' ?></p>
     <a class="btn btn-primary" href="<?= url('seeker/browse.php') ?>">Clear filters</a>
   </div>
 <?php endif; ?>
