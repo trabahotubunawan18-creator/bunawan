@@ -14,6 +14,7 @@ const PREMIUM_JOB_COND = "EXISTS(SELECT 1 FROM premium_subscription_jobs psj JOI
 const PUBLIC_JOB_SQL = "
  SELECT j.id, j.title, j.employment_type, j.salary_min, j.salary_max, j.salary_period,
         j.deadline, j.created_at, j.student_friendly, j.work_schedule, j.resume_requirement,
+        j.latitude, j.longitude,
         ep.employer_name, ep.verification_status, ep.logo_path,
         j.barangay_id, b.name AS barangay, c.name AS category,
         CASE WHEN " . PREMIUM_JOB_COND . " THEN 1 ELSE 0 END AS is_premium
@@ -23,6 +24,79 @@ const PUBLIC_JOB_SQL = "
  JOIN job_categories c ON c.id = j.category_id
  WHERE j.status = 'approved' AND j.deadline >= CURRENT_DATE
    AND ep.verification_status IN ('verified_business','verified_local')";
+
+// ---------- Nearby jobs (GPS) ----------
+// The seeker taps "Jobs near me", the browser shares the phone's location, and the page reloads with
+// ?lat=..&lng=..&radius=.. . Distance is worked out in SQL (Haversine) from the pin the employer dropped on the job.
+const NEARBY_RADII = [1, 2, 5, 10, 20, 50];   // km choices in the "Distance" menu
+
+// Reads and cleans lat / lng / radius from $_GET. Returns null when there is no usable location.
+// Coordinates are rounded to 4 decimals (about 11 m) so the exact spot is not kept in links or history.
+function geo_from_request(array $src): ?array {
+    $lat = $src['lat'] ?? ''; $lng = $src['lng'] ?? '';
+    if (!is_numeric($lat) || !is_numeric($lng)) return null;
+    $lat = round((float)$lat, 4); $lng = round((float)$lng, 4);
+    if ($lat < -90 || $lat > 90 || $lng < -180 || $lng > 180) return null;
+    $radius = (int)($src['radius'] ?? 0);
+    if (!in_array($radius, NEARBY_RADII, true)) $radius = 0;
+    return ['lat' => $lat, 'lng' => $lng, 'radius' => $radius];
+}
+// SQL for "distance in km from the seeker to job j". NULL when the job has no pin. The numbers are validated floats, so they are safe to write in.
+function geo_distance_sql(array $geo): string {
+    $la = sprintf('%.6F', $geo['lat']); $ln = sprintf('%.6F', $geo['lng']);
+    // CASE needed: PostgreSQL's least()/greatest() ignore NULL, which would turn "no pin" into a fake distance
+    return "(CASE WHEN j.latitude IS NULL OR j.longitude IS NULL THEN NULL ELSE 6371 * acos(least(1, greatest(-1, cos(radians({$la}::float8)) * cos(radians(j.latitude::float8)) * cos(radians(j.longitude::float8) - radians({$ln}::float8)) + sin(radians({$la}::float8)) * sin(radians(j.latitude::float8))))) END)";
+}
+// PUBLIC_JOB_SQL with a "distance_km" column added when a location is known.
+function geo_public_job_sql(?array $geo): string {
+    if (!$geo) return PUBLIC_JOB_SQL;
+    return str_replace(' SELECT j.id,', ' SELECT ' . geo_distance_sql($geo) . ' AS distance_km, j.id,', PUBLIC_JOB_SQL);
+}
+// Extra WHERE for the chosen radius. A cheap bounding box runs first, then the exact distance. Jobs with no pin are left out.
+function geo_where(?array $geo): string {
+    if (!$geo || $geo['radius'] <= 0) return '';
+    $r = $geo['radius'];
+    $dLat = $r / 111.0;
+    $dLng = $r / (111.0 * max(0.05, cos(deg2rad($geo['lat']))));
+    return sprintf(' AND j.latitude IS NOT NULL AND j.longitude IS NOT NULL AND j.latitude BETWEEN %.6F AND %.6F AND j.longitude BETWEEN %.6F AND %.6F AND %s <= %d',
+        $geo['lat'] - $dLat, $geo['lat'] + $dLat, $geo['lng'] - $dLng, $geo['lng'] + $dLng, geo_distance_sql($geo), $r);
+}
+// ORDER BY for "Nearest to me": closest first, jobs with no pin last, then Featured, then newest.
+const GEO_ORDER = 'distance_km ASC NULLS LAST, is_premium DESC, j.created_at DESC';
+function distance_label(float $km): string {
+    if ($km < 1) return max(10, (int)(round($km * 100) * 10)) . ' m';
+    return number_format($km, $km < 10 ? 1 : 0) . ' km';
+}
+// "Jobs near me" button + distance menu. Put it INSIDE the search <form>. Needs assets/js/nearme.js (loaded here).
+function render_nearme(?array $geo): void {
+    static $css = false;
+    if (!$css) { $css = true; ?>
+<style>
+.nm{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.nm-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.nm.is-on .nm-btn{background:var(--mint,#E4F3E9);border-color:var(--green,#1B7F45);color:var(--forest,#0F3D2E)}
+.nm select{min-height:40px}
+.nm-clear{background:none;border:0;padding:0;color:var(--green,#1B7F45);font:inherit;font-size:.88rem;text-decoration:underline;cursor:pointer}
+.nm-status{flex-basis:100%;margin:0;font-size:.85rem;color:var(--muted,#5b6b61)}
+.nm-status.is-warn{color:#9A3412}.nm-status.is-ok{color:var(--green,#1B7F45)}
+.facts .fact-dist{font-weight:700;color:var(--green,#1B7F45)}
+</style>
+<script src="<?= url('assets/js/nearme.js') ?>?v=1" defer></script>
+<?php }
+    $on = $geo !== null; ?>
+<div class="nm<?= $on ? ' is-on' : '' ?>" data-nearme>
+  <input type="hidden" name="lat" value="<?= $on ? e((string)$geo['lat']) : '' ?>" data-nm-lat>
+  <input type="hidden" name="lng" value="<?= $on ? e((string)$geo['lng']) : '' ?>" data-nm-lng>
+  <button type="button" class="btn btn-outline nm-btn" data-nm-btn><?= icon('pin', 16) ?> <span><?= $on ? 'Update my location' : 'Jobs near me' ?></span></button>
+  <label class="sr-only" for="nm-radius">Distance</label>
+  <select id="nm-radius" name="radius" title="How far from you">
+    <option value="">Any distance</option>
+    <?php foreach (NEARBY_RADII as $km): ?><option value="<?= $km ?>" <?= $on && $geo['radius'] === $km ? 'selected' : '' ?>>Within <?= $km ?> km</option><?php endforeach; ?>
+  </select>
+  <button type="button" class="nm-clear" data-nm-clear <?= $on ? '' : 'hidden' ?>>&#10005; Clear location</button>
+  <p class="nm-status" data-nm-status aria-live="polite"><?= $on ? 'Using your location. Jobs without a map pin are ' . ($geo['radius'] ? 'hidden.' : 'listed last.') : 'Share your location to see jobs closest to you.' ?></p>
+</div>
+<?php }
 
 function salary_text(array $j): string {
     if ($j['salary_period'] === 'negotiable' || (!$j['salary_min'] && !$j['salary_max'])) return 'Negotiable';
@@ -139,6 +213,7 @@ function render_job_card(array $j, bool $featured = false, ?array $save = null):
     </div>
     <ul class="facts">
       <li><?= icon('pin') ?> <?= e($j['barangay']) ?></li>
+      <?php if (isset($j['distance_km']) && $j['distance_km'] !== '' && $j['distance_km'] !== null): ?><li class="fact-dist"><?= icon('map') ?> <?= e(distance_label((float)$j['distance_km'])) ?> away</li><?php endif; ?>
       <li><?= icon('briefcase') ?> <?= e(type_label($j['employment_type'])) ?></li>
       <li><?= icon('tag') ?> <?= e($j['category']) ?></li>
     </ul>
@@ -490,10 +565,8 @@ function attach_skill_info(PDO $pdo, array &$jobs, ?array $mine = null): void {
     unset($j);
 }
 // Best skill match first, then the seeker's own barangay, then Featured, then newest. Jobs with no skills listed count as 0%.
-// With $featuredFirst = true, Featured (Premium) posts always come first and the order above applies inside each group.
-function skill_sort_jobs(array $jobs, ?int $barangayId = null, bool $featuredFirst = false): array {
-    usort($jobs, function ($a, $b) use ($barangayId, $featuredFirst) {
-        if ($featuredFirst && (int)$a['is_premium'] !== (int)$b['is_premium']) return (int)$b['is_premium'] <=> (int)$a['is_premium'];
+function skill_sort_jobs(array $jobs, ?int $barangayId = null): array {
+    usort($jobs, function ($a, $b) use ($barangayId) {
         $pa = (int)($a['match']['pct'] ?? 0); $pb = (int)($b['match']['pct'] ?? 0);
         if ($pa !== $pb) return $pb <=> $pa;
         if ($barangayId) {
