@@ -17,7 +17,9 @@ if ($schedule === 'any' || !isset(WORK_SCHEDULES[$schedule])) $schedule = '';
 $noresume = !empty($_GET['noresume']);
 $isSeeker = (($_SESSION['role'] ?? '') === 'seeker');
 $skill    = mb_substr(trim((string)($_GET['skill'] ?? '')), 0, 80);
-$sort     = in_array($_GET['sort'] ?? '', $isSeeker ? ['oldest', 'deadline', 'match'] : ['oldest', 'deadline'], true) ? $_GET['sort'] : 'newest';
+$geo      = geo_from_request($_GET);   // set when the visitor shared their location ("Jobs near me")
+$sortOk   = array_merge($isSeeker ? ['oldest', 'deadline', 'match'] : ['oldest', 'deadline'], $geo ? ['nearest'] : []);
+$sort     = in_array($_GET['sort'] ?? '', $sortOk, true) ? $_GET['sort'] : 'newest';
 $page     = max(1, min(50, (int)($_GET['page'] ?? 1)));
 $perPage  = 12;
 
@@ -36,10 +38,13 @@ if ($schedule !== '') { $where .= ' AND j.work_schedule = :ws'; $p['ws'] = $sche
 if ($noresume) $where .= " AND j.resume_requirement = 'none'";
 if ($skill !== '') { $where .= ' AND EXISTS (SELECT 1 FROM job_skills jsf WHERE jsf.job_id = j.id AND jsf.skill_key = :sk)'; $p['sk'] = $skill; }
 
+$where .= geo_where($geo);
+
 $orders = [
+    'nearest'  => GEO_ORDER,
     'newest'   => 'is_premium DESC, j.created_at DESC',
-    'oldest'   => 'is_premium DESC, j.created_at ASC',
-    'deadline' => 'is_premium DESC, j.deadline ASC',
+    'oldest'   => 'j.created_at ASC',
+    'deadline' => 'j.deadline ASC',
     'match'    => 'is_premium DESC, j.created_at DESC',
 ];
 $limit = $page * $perPage;
@@ -48,7 +53,7 @@ $cnt = $pdo->prepare('SELECT COUNT(*) FROM (' . PUBLIC_JOB_SQL . $where . ') t')
 $cnt->execute($p);
 $total = (int)$cnt->fetchColumn();
 
-$st = $pdo->prepare(PUBLIC_JOB_SQL . $where . ' ORDER BY ' . $orders[$sort] . ' LIMIT ' . ($sort === 'match' ? 200 : (int)$limit));
+$st = $pdo->prepare(geo_public_job_sql($geo) . $where . ' ORDER BY ' . $orders[$sort] . ' LIMIT ' . ($sort === 'match' ? 200 : (int)$limit));
 $st->execute($p);
 $jobs = $st->fetchAll();
 // Seekers who are logged in also see how well each job matches their skills
@@ -56,7 +61,7 @@ $myKeys = $isSeeker ? skill_list_map(seeker_skill_list($pdo, (int)$_SESSION['uid
 attach_skill_info($pdo, $jobs, $myKeys ?: null);
 if ($sort === 'match') {
     $mb = $pdo->prepare('SELECT barangay_id FROM seeker_profiles WHERE user_id = ?'); $mb->execute([(int)$_SESSION['uid']]);
-    $jobs = array_slice(skill_sort_jobs($jobs, (int)$mb->fetchColumn() ?: null, true), 0, $limit);
+    $jobs = array_slice(skill_sort_jobs($jobs, (int)$mb->fetchColumn() ?: null), 0, $limit);
 }
 $skillOpts = skills_in_use($pdo);
 
@@ -65,7 +70,8 @@ $categories = $pdo->query('SELECT id, name FROM job_categories WHERE is_active =
 
 $active = array_filter(['q' => $q, 'barangay' => $barangay, 'category' => $category, 'skill' => $skill, 'type' => $type,
     'salary_min' => $smin ?: '', 'student' => $student ? 1 : '', 'schedule' => $schedule,
-    'noresume' => $noresume ? 1 : '', 'sort' => $sort !== 'newest' ? $sort : ''], fn($v) => $v !== '' && $v !== 0);
+    'noresume' => $noresume ? 1 : '', 'lat' => $geo['lat'] ?? '', 'lng' => $geo['lng'] ?? '', 'radius' => $geo['radius'] ?? '',
+    'sort' => $sort !== 'newest' ? $sort : ''], fn($v) => $v !== '' && $v !== 0);
 $moreUrl = 'jobs.php?' . http_build_query($active + ['page' => $page + 1]);
 ?>
 <section class="page-hero">
@@ -114,11 +120,15 @@ $moreUrl = 'jobs.php?' . http_build_query($active + ['page' => $page + 1]);
         <label class="check-row"><input type="checkbox" name="student" value="1" <?= $student ? 'checked' : '' ?>> <span>Student-friendly</span></label>
         <label class="check-row"><input type="checkbox" name="noresume" value="1" <?= $noresume ? 'checked' : '' ?>> <span>No resume needed</span></label>
 
+        <label>Near me</label>
+        <?php render_nearme($geo); ?>
+
         <label for="f-sort">Sort by</label>
         <select id="f-sort" name="sort">
           <option value="newest" <?= $sort === 'newest' ? 'selected' : '' ?>>Newest first</option>
           <option value="oldest" <?= $sort === 'oldest' ? 'selected' : '' ?>>Oldest first</option>
           <option value="deadline" <?= $sort === 'deadline' ? 'selected' : '' ?>>Nearest deadline</option>
+          <option value="nearest" <?= $sort === 'nearest' ? 'selected' : '' ?>>Nearest to me</option>
           <?php if ($isSeeker): ?><option value="match" <?= $sort === 'match' ? 'selected' : '' ?>>Best skills match</option><?php endif; ?>
         </select>
 
@@ -129,7 +139,7 @@ $moreUrl = 'jobs.php?' . http_build_query($active + ['page' => $page + 1]);
 
     <div>
       <div class="results-bar">
-        <p><b><?= number_format($total) ?></b> <?= $total === 1 ? 'job' : 'jobs' ?> found<?= $q !== '' ? ' for “' . e($q) . '”' : '' ?></p>
+        <p><b><?= number_format($total) ?></b> <?= $total === 1 ? 'job' : 'jobs' ?> found<?= $q !== '' ? ' for “' . e($q) . '”' : '' ?><?= $geo && $geo['radius'] ? ' within ' . (int)$geo['radius'] . ' km of you' : '' ?></p>
       </div>
 
       <?php if ($jobs): ?>
@@ -143,7 +153,7 @@ $moreUrl = 'jobs.php?' . http_build_query($active + ['page' => $page + 1]);
         <div class="card empty">
           <img src="<?= url('assets/img/empty-no-jobs.svg') ?>" alt="" width="160" onerror="this.style.display='none'">
           <h3>No jobs match your search</h3>
-          <p>Try fewer filters or a different keyword, or check back soon as new jobs are posted often.</p>
+          <p><?= $geo && $geo['radius'] ? 'No jobs with a map pin within ' . (int)$geo['radius'] . ' km of you. Try a bigger distance, or choose “Any distance”.' : 'Try fewer filters or a different keyword, or check back soon as new jobs are posted often.' ?></p>
           <a class="btn btn-primary" href="<?= url('jobs.php') ?>">Clear filters</a>
         </div>
       <?php endif; ?>
