@@ -2744,7 +2744,7 @@ a.emp-notif-msg:hover{color:var(--green);text-decoration:underline}
 .emp-page .app-main .pj-reminder{margin-top:14px;padding:11px 14px;background:#FFF9E0;border:1px solid #F0DFA0;border-left:4px solid var(--gold);border-radius:12px;color:#4A3800;font-size:13.5px}
 
 /* Action bar (stays in view while you scroll the long form) */
-.emp-page .app-main .pj-actions{position:sticky;bottom:12px;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 16px 12px 20px;background:#FFFBEA;border:1px solid #F1E4B4;border-radius:16px;box-shadow:var(--shadow-md)}
+.emp-page .app-main .pj-actions{position:static;margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 16px 12px 20px;background:#FFFBEA;border:1px solid #F1E4B4;border-radius:16px;box-shadow:var(--shadow-md)}
 .emp-page .app-main .pj-actions p{margin:0}
 .emp-page .app-main .pj-actions-btns{display:flex;gap:10px;margin-left:auto}
 .emp-page .app-main .pj-actions .btn{min-height:42px;padding:0 20px;border-radius:10px}
@@ -2781,7 +2781,7 @@ a.emp-notif-msg:hover{color:var(--green);text-decoration:underline}
   .emp-page .app-main .pj-sec-head{padding:12px 16px}
   .emp-page .app-main .pj-body{padding:4px 16px 18px}
   .emp-page .app-main .pj-pay,.emp-page .app-main .pj-checks{grid-template-columns:1fr}
-  .emp-page .app-main .pj-actions{bottom:8px;padding:12px 14px}
+  .emp-page .app-main .pj-actions{padding:12px 14px}
   .emp-page .app-main .pj-actions p{display:none}
   .emp-page .app-main .pj-actions-btns{width:100%}
   .emp-page .app-main .pj-actions .btn{flex:1}
@@ -4345,6 +4345,8 @@ body.xp-open{overflow:hidden}
 .leaflet-container .leaflet-control-layers{font-size:14px}
 .leaflet-container .leaflet-control-scale-line{font-weight:600}
 .tbb-pop{font-weight:600;font-size:14px}
+/* Keep Leaflet's high internal z-indexes inside the map so it never covers the top bar or the sticky Cancel/Publish bar */
+.leaflet-container{isolation:isolate}
 .tbb-map-full{position:fixed!important;top:0;left:0;right:0;bottom:0;width:100%!important;height:100%!important;z-index:99999;border-radius:0!important;border:0!important}
 html.tbb-lock,html.tbb-lock body{overflow:hidden}
 .tbb-note.ok{color:#1b6e3a}
