@@ -219,7 +219,7 @@ $pjDayPct = DAILY_POST_LIMIT > 0 ? min(100, (int)round($limits['today'] / DAILY_
     <label for="pj-addr">Work address (optional)</label>
     <input id="pj-addr" name="address" maxlength="255" value="<?= e($v['address']) ?>" placeholder="Purok, street, or landmark">
     <label>Exact location on the map</label>
-    <p class="small pj-maphelp">Click the map where the work is, then drag the pin to adjust. Zoom in with the + button until you can see the roof. Tap "Use my current location" if you are at the workplace. Job seekers will see this pin.</p>
+    <p class="small pj-maphelp">Choose the barangay first and the map will jump to it. Then click the map where the work is, and drag the pin to adjust. Zoom in with the + button until you can see the roof. Tap "Use my current location" if you are at the workplace. Job seekers will see this pin.</p>
     <div id="pj-map" class="pj-map"></div>
     <input type="hidden" id="pj-lat" name="lat" value="<?= e($v['lat']) ?>"><input type="hidden" id="pj-lng" name="lng" value="<?= e($v['lng']) ?>">
     <div class="btn-row"><button class="btn btn-outline btn-sm" type="button" id="pj-locate">Use my current location</button>
@@ -291,9 +291,9 @@ $pjDayPct = DAILY_POST_LIMIT > 0 ? min(100, (int)round($limits['today'] / DAILY_
 </div>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="<?= url('assets/js/tbbmap.js') ?>?v=2"></script>
+<script src="<?= url('assets/js/tbbmap.js') ?>?v=3"></script>
 <script>
-TBBMap.picker({map:'pj-map', lat:'pj-lat', lng:'pj-lng', note:'pj-pin-note', locate:'pj-locate', center:'pj-center'});
+TBBMap.picker({map:'pj-map', lat:'pj-lat', lng:'pj-lng', note:'pj-pin-note', locate:'pj-locate', center:'pj-center', barangay:'pj-brgy'});
 </script>
 <script src="<?= url('assets/js/postjob.js') ?>"></script>
 <script>
