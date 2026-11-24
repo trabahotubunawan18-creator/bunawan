@@ -183,16 +183,16 @@
     function showBarangay(userChanged) {
       var b = brgyInfo();
       if (!b) { if (userChanged) say('Choose a barangay, then click the map where the work is.'); return; }
-      if (marker) {
-        if (!userChanged) return;                        // editing a saved job: keep its pin and view
-        if (map.distance(marker.getLatLng(), b.ll) <= 4000) return;   // pin already in this barangay
-        clearPin();                                      // pin belongs to another barangay
-        map.setView(b.ll, b.zoom);
-        say('Map moved to ' + b.name + '. Please place the pin on the exact location.', 'warn');
-        return;
+      if (marker && !userChanged) return;                // editing a saved job: keep its pin and view
+      map.setView(b.ll, b.zoom);                         // always jump to the chosen barangay
+      if (marker && map.distance(marker.getLatLng(), b.ll) > 4000) {
+        clearPin();                                      // old pin belongs to another barangay
+        say('Showing ' + b.name + '. The old pin was removed. Please place the pin on the exact location.', 'warn');
+      } else if (marker) {
+        say('Showing ' + b.name + '. Drag the pin to the exact spot if needed.');
+      } else {
+        say('Showing ' + b.name + '. Click the map to place the pin on the exact spot.');
       }
-      map.setView(b.ll, b.zoom);
-      say('Showing ' + b.name + '. Click the map to place the pin on the exact spot.');
     }
     if (brgySel) {
       brgySel.addEventListener('change', function () { showBarangay(true); });
