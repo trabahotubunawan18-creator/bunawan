@@ -214,9 +214,9 @@
 
     // My current location, with the GPS accuracy circle
     if (o.locate && $(o.locate)) $(o.locate).addEventListener('click', function () {
-      if (!navigator.geolocation) { say('Your browser cannot share your location.', 'warn'); return; }
-      say('Finding you...');
-      navigator.geolocation.getCurrentPosition(function (p) {
+      if (!navigator.geolocation) { say('Your browser cannot share your location. Click the map instead.', 'warn'); return; }
+
+      function found(p) {
         var lat = p.coords.latitude, lng = p.coords.longitude, acc = Math.round(p.coords.accuracy || 0);
         if (ring) map.removeLayer(ring);
         if (acc) ring = L.circle([lat, lng], { radius: acc, color: '#1976d2', weight: 1, fillOpacity: .12 }).addTo(map);
@@ -224,8 +224,26 @@
           map.setView([lat, lng], acc > 60 ? 18 : 19);
           if (acc > 100) say('Your location is only accurate to about ' + acc + ' m. Please drag the pin onto the exact building.', 'warn');
         }
-      }, function () { say('Could not get your location. Click the map instead.', 'warn'); },
-      { enableHighAccuracy: true, timeout: 12000 });
+      }
+      // err.code: 1 = permission blocked, 2 = no position available (GPS off / no signal), 3 = timed out
+      function failed(err, usedGps) {
+        var c = err && err.code;
+        if (c === 1) {
+          say('Location is blocked for this site. Tap the lock icon next to the web address, set Location to Allow, turn on your phone\'s Location (GPS), then try again. Or click the map instead.', 'warn');
+        } else if (usedGps) {
+          say('GPS is slow. Trying your network location...');
+          navigator.geolocation.getCurrentPosition(found, function (e2) { failed(e2, false); },
+            { enableHighAccuracy: false, timeout: 20000, maximumAge: 60000 });
+        } else if (c === 2) {
+          say('Your phone could not find your location. Turn on Location (GPS) in your phone settings and go near a window, then try again. Or click the map instead.', 'warn');
+        } else {
+          say('Finding your location took too long. Try again, or click the map instead.', 'warn');
+        }
+      }
+
+      say('Finding you... Please tap Allow if your phone asks for your location.');
+      navigator.geolocation.getCurrentPosition(found, function (e) { failed(e, true); },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
     });
 
     return m;
