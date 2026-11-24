@@ -109,7 +109,8 @@
     });
 
     clarity.addTo(map);
-    places.addTo(map);
+    roads.addTo(map);    // road lines and names on top of the satellite image
+    places.addTo(map);   // barangay, town and landmark names
     L.control.layers(
       { 'Satellite': clarity, 'Satellite (alternate)': classic, 'Street map': street },
       { 'Place names': places, 'Roads': roads },
