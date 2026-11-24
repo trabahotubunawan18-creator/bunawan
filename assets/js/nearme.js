@@ -39,7 +39,7 @@
         else if (err && err.code === 2) m = 'Your location is not available. Turn on GPS / Location and try again.';
         else if (err && err.code === 3) m = 'Finding your location took too long. Please try again.';
         say(m);
-      }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
+      }, { enableHighAccuracy: false, timeout: 15000, maximumAge: 120000 });  // Wi-Fi / cell location is enough for barangay-level search and is faster on phones and laptops
     }
 
     function turnOff() {
@@ -47,6 +47,9 @@
       if (sort && sort.value === 'nearest') sort.value = 'newest';
       form.submit();
     }
+
+    // Coming back with the Back button can restore the page mid-search; reset it
+    window.addEventListener('pageshow', function (ev) { if (ev.persisted) { done(); say(''); } });
 
     // One button: on = location already set, so a tap turns it off; off = a tap asks for the location
     btn.addEventListener('click', function () { if (lat.value) turnOff(); else locate(); });
