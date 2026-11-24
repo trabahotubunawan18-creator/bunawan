@@ -38,8 +38,8 @@ if ($skill !== '') { $where .= ' AND EXISTS (SELECT 1 FROM job_skills jsf WHERE 
 
 $orders = [
     'newest'   => 'is_premium DESC, j.created_at DESC',
-    'oldest'   => 'j.created_at ASC',
-    'deadline' => 'j.deadline ASC',
+    'oldest'   => 'is_premium DESC, j.created_at ASC',
+    'deadline' => 'is_premium DESC, j.deadline ASC',
     'match'    => 'is_premium DESC, j.created_at DESC',
 ];
 $limit = $page * $perPage;
@@ -56,7 +56,7 @@ $myKeys = $isSeeker ? skill_list_map(seeker_skill_list($pdo, (int)$_SESSION['uid
 attach_skill_info($pdo, $jobs, $myKeys ?: null);
 if ($sort === 'match') {
     $mb = $pdo->prepare('SELECT barangay_id FROM seeker_profiles WHERE user_id = ?'); $mb->execute([(int)$_SESSION['uid']]);
-    $jobs = array_slice(skill_sort_jobs($jobs, (int)$mb->fetchColumn() ?: null), 0, $limit);
+    $jobs = array_slice(skill_sort_jobs($jobs, (int)$mb->fetchColumn() ?: null, true), 0, $limit);
 }
 $skillOpts = skills_in_use($pdo);
 
