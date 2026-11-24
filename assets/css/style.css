@@ -528,6 +528,10 @@ a.role:hover{border-color:var(--leaf)}
   .side{position:fixed;left:0;top:0;bottom:0;width:284px;max-width:86vw;z-index:60;transform:translateX(-100%);transition:transform .22s ease,visibility 0s linear .22s;visibility:hidden}
   .app.open .side{transform:none;box-shadow:0 0 40px rgba(0,0,0,.35);visibility:visible;transition:transform .22s ease,visibility 0s}
   .app.open .side-shade{display:block;position:fixed;inset:0;background:rgba(5,20,14,.5);z-index:55}
+  /* Fill the real visible height on phones (the browser bar hides/shows while scrolling) */
+  .side{height:var(--app-h,100dvh);overscroll-behavior:contain;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px))}
+  .app.open .side-shade{bottom:auto;height:var(--app-h,100dvh)}
+  html.nav-open{overflow:hidden}
   .side-toggle{display:flex}
   .topbar,.app-main,.app-foot{padding-left:20px;padding-right:20px}
   .duo{grid-template-columns:1fr}
