@@ -2,7 +2,7 @@
 // Red-flag checker and posting limits for job posts.
 require_once __DIR__ . '/helpers.php';
 
-foreach (['FREE_ACTIVE_LIMIT' => 3, 'PREMIUM_ACTIVE_LIMIT' => 10, 'DAILY_POST_LIMIT' => 5, 'MAX_DEADLINE_DAYS' => 60,
+foreach (['DAILY_POST_LIMIT' => 5, 'MAX_DEADLINE_DAYS' => 60,
           'REPORT_HIDE_AT' => 3, 'FLAG_STRIKES' => 3, 'HIGH_MONTHLY_SALARY' => 40000] as $k => $v) if (!defined($k)) define($k, $v);
 
 const FLAG_MESSAGES = [
@@ -85,7 +85,7 @@ function employer_post_limits(PDO $pdo, int $uid): array {
     $q = $pdo->prepare("SELECT COUNT(*) FROM job_posts WHERE employer_id = ? AND red_flags IS NOT NULL AND red_flags <> '' AND red_flags NOT LIKE '%reported%'
         AND status IN ('pending','rejected') AND created_at >= (NOW() - INTERVAL '30 days')");
     $q->execute([$uid]); $strikes = (int)$q->fetchColumn();
-    return ['premium' => $premium, 'limit' => FREE_ACTIVE_LIMIT, 'active' => $active, 'today' => $today, 'strikes' => $strikes];
+    return ['premium' => $premium, 'active' => $active, 'today' => $today, 'strikes' => $strikes];
 }
 
 function notify_admins(PDO $pdo, string $msg, string $link): void {
