@@ -161,7 +161,7 @@ $tabs = function (string $on): string {
       <div class="card plan-card">
         <div class="plan-head"><h3>Free</h3></div>
         <p class="price">₱0</p>
-        <ul class="plan-list"><li>Verified employer badge</li><li>Post jobs (limited active posts)</li><li>Applicant management</li><li>Basic statistics</li></ul>
+        <ul class="plan-list"><li>Verified employer badge</li><li>Post jobs (up to 5 new posts a day)</li><li>Applicant management</li><li>Basic statistics</li></ul>
       </div>
       <div class="card plan-card plan-premium">
         <div class="plan-head"><h3>Premium</h3><span class="badge badge-gold">&#9733; Featured</span></div>
