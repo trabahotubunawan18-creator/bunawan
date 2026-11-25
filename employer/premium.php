@@ -222,7 +222,7 @@ require __DIR__ . '/../includes/emp_top.php';
     <div class="pm-price"><b>&#8369;0</b><span>forever</span></div>
     <ul class="plan-list">
       <li>Normal ranking in search</li>
-      <li>Up to <?= (int)FREE_ACTIVE_LIMIT ?> active job posts</li>
+      <li>Post jobs for free</li>
       <li>Verification badge</li>
     </ul>
   </section>
