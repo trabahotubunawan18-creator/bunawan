@@ -66,7 +66,7 @@ require_once __DIR__ . '/includes/back_button.php';
           <li>Each job post is reviewed before it goes live. We may hold or remove posts that look misleading or unsafe.</li>
           <li>Job posts must be for work in Bunawan and must describe the job truthfully, including pay if you state it.</li>
           <li><b>You must never charge applicants</b> any placement, training, application, or similar fee, or ask them to send money.</li>
-          <li>Accounts have a limit on how many job posts can be active at once.</li>
+          <li>Accounts can publish up to 5 new job posts per day.</li>
           <li>Treat applicants' information with care and use it only to consider them for the job.</li>
         </ul>
       </section>
