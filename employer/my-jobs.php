@@ -23,7 +23,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_check()) {
         if (!$canPost) flash('error', 'Your account must be verified to reopen a job.');
         elseif ($j['deadline'] < date('Y-m-d')) flash('error', 'The deadline has passed. Use Renew to set a new deadline.');
         elseif ($lim['strikes'] >= FLAG_STRIKES) flash('error', 'Posting is paused until our team reviews your account.');
-        elseif ($lim['active'] >= $lim['limit']) flash('error', 'You reached your limit of ' . $lim['limit'] . ' active posts. Close another job first.');
         else {
             $hold = !empty($j['red_flags']) || setting('post_mode', 'auto') === 'manual';
             $pdo->prepare('UPDATE job_posts SET status = ?, approved_at = CASE WHEN CAST(? AS text) = \'approved\' THEN COALESCE(approved_at, NOW()) ELSE NULL END WHERE id = ? AND employer_id = ?')
