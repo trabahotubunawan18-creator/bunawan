@@ -54,7 +54,6 @@ $block = null;
 if (!$canPost) $block = 'Posting is locked until your account is verified.';
 elseif ($isNew && $limits['strikes'] >= FLAG_STRIKES) $block = 'Several of your recent posts were flagged. Posting is paused until our team reviews your account. Please contact us.';
 elseif ($isNew && $limits['today'] >= DAILY_POST_LIMIT) $block = 'You reached today\'s limit of ' . DAILY_POST_LIMIT . ' new posts. Please try again tomorrow.';
-elseif ($isNew && $limits['active'] >= $limits['limit']) $block = 'You have ' . $limits['active'] . ' of ' . $limits['limit'] . ' active posts. Close one to post another.';
 elseif ($editing && !$reopening && !in_array($job['status'], ['approved', 'pending', 'rejected'], true)) $block = 'This job cannot be edited.';
 
 $errors = [];
@@ -159,12 +158,11 @@ $todayStr = date('Y-m-d'); $maxStr = date('Y-m-d', strtotime('+' . MAX_DEADLINE_
 $pjSub = $reopening ? 'Check the details and set a new deadline to open this job again.'
        : ($editing ? 'Update your job details, then save. Posts with warning signs are held for a quick admin review.'
        : 'Clean posts go live right away. Posts with warning signs are held for a quick admin review.');
-$pjActPct = $limits['limit'] > 0 ? min(100, (int)round($limits['active'] / $limits['limit'] * 100)) : 0;
 $pjDayPct = DAILY_POST_LIMIT > 0 ? min(100, (int)round($limits['today'] / DAILY_POST_LIMIT * 100)) : 0;
 ?>
 <header class="ep-head">
   <div><h1 class="dash-title ep-title"><?= e($pageTitle) ?></h1><p class="ep-sub"><?= e($pjSub) ?></p></div>
-  <span class="ep-count"><b><?= (int)$limits['active'] ?></b> of <?= (int)$limits['limit'] ?> active posts</span>
+  <span class="ep-count"><b><?= (int)$limits['today'] ?></b> of <?= (int)DAILY_POST_LIMIT ?> new posts today</span>
 </header>
 
 <?php if ($block): ?>
@@ -219,7 +217,7 @@ $pjDayPct = DAILY_POST_LIMIT > 0 ? min(100, (int)round($limits['today'] / DAILY_
     <label for="pj-addr">Work address (optional)</label>
     <input id="pj-addr" name="address" maxlength="255" value="<?= e($v['address']) ?>" placeholder="Purok, street, or landmark">
     <label>Exact location on the map</label>
-    <p class="small pj-maphelp">Choose the barangay first and the map will jump to it. Then click the map where the work is, and drag the pin to adjust. Zoom in with the + button until you can see the roof. Tap "Use my current location" if you are at the workplace. Job seekers will see this pin.</p>
+    <p class="small pj-maphelp">Click the map where the work is, then drag the pin to adjust. Zoom in with the + button until you can see the roof. Tap "Use my current location" if you are at the workplace. Job seekers will see this pin.</p>
     <div id="pj-map" class="pj-map"></div>
     <input type="hidden" id="pj-lat" name="lat" value="<?= e($v['lat']) ?>"><input type="hidden" id="pj-lng" name="lng" value="<?= e($v['lng']) ?>">
     <div class="btn-row"><button class="btn btn-outline btn-sm" type="button" id="pj-locate">Use my current location</button>
@@ -271,9 +269,7 @@ $pjDayPct = DAILY_POST_LIMIT > 0 ? min(100, (int)round($limits['today'] / DAILY_
   </article>
   <div class="notice pj-warn" id="pv-warn" hidden><b>This post may be held for review.</b> It seems to mention:<ul style="margin:6px 0 0 18px"></ul><span class="small">You can still submit. Removing these phrases lets it go live right away.</span></div>
   <div class="card panel-card pj-limits">
-    <h3>Your posting limits <span class="pj-plan"><?= $limits['premium'] ? 'Premium' : 'Free plan' ?></span></h3>
-    <div class="lim"><div class="lim-row"><span>Active posts</span><b><?= (int)$limits['active'] ?> of <?= (int)$limits['limit'] ?></b></div>
-      <div class="lim-bar<?= $pjActPct >= 80 ? ' warn' : '' ?>"><i style="width:<?= $pjActPct ?>%"></i></div></div>
+    <h3>Your posting limit</h3>
     <div class="lim"><div class="lim-row"><span>New posts today</span><b><?= (int)$limits['today'] ?> of <?= (int)DAILY_POST_LIMIT ?></b></div>
       <div class="lim-bar<?= $pjDayPct >= 80 ? ' warn' : '' ?>"><i style="width:<?= $pjDayPct ?>%"></i></div></div>
     <a class="pj-upgrade" href="<?= url('employer/premium.php') ?>">Want a post to stand out? See Premium</a>
@@ -291,9 +287,9 @@ $pjDayPct = DAILY_POST_LIMIT > 0 ? min(100, (int)round($limits['today'] / DAILY_
 </div>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="<?= url('assets/js/tbbmap.js') ?>?v=<?= filemtime(__DIR__ . '/../assets/js/tbbmap.js') ?>"></script>
+<script src="<?= url('assets/js/tbbmap.js') ?>?v=2"></script>
 <script>
-TBBMap.picker({map:'pj-map', lat:'pj-lat', lng:'pj-lng', note:'pj-pin-note', locate:'pj-locate', center:'pj-center', barangay:'pj-brgy'});
+TBBMap.picker({map:'pj-map', lat:'pj-lat', lng:'pj-lng', note:'pj-pin-note', locate:'pj-locate', center:'pj-center'});
 </script>
 <script src="<?= url('assets/js/postjob.js') ?>"></script>
 <script>
